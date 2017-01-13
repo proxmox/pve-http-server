@@ -24,6 +24,7 @@ use Compress::Zlib;
 use PVE::SafeSyslog;
 use PVE::INotify;
 use PVE::Tools;
+use PVE::APIServer::Formatter;
 
 use Net::IP;
 use URI;
@@ -38,7 +39,6 @@ use Data::Dumper;
 my $limit_max_headers = 30;
 my $limit_max_header_size = 8*1024;
 my $limit_max_post = 16*1024;
-
 
 my $known_methods = {
     GET => 1,
@@ -55,57 +55,6 @@ my $split_abs_uri = sub {
 
     return wantarray ? ($rel_uri, $format) : $rel_uri;
 };
-
-# generic formatter support
-
-my $formatter_hash = {};
-
-sub register_formatter {
-    my ($format, $func) = @_;
-
-    die "formatter '$format' already defined" if $formatter_hash->{$format};
-
-    $formatter_hash->{$format} = {
-	func => $func,
-    };
-}
-
-sub get_formatter {
-    my ($format) = @_; 
-
-     return undef if !$format;
-
-    my $info = $formatter_hash->{$format};
-    return undef if !$info;
-
-    return $info->{func};
-}
-
-my $login_formatter_hash = {};
-
-sub register_login_formatter {
-    my ($format, $func) = @_;
-
-    die "login formatter '$format' already defined" if $login_formatter_hash->{$format};
-
-    $login_formatter_hash->{$format} = {
-	func => $func,
-    };
-}
-
-sub get_login_formatter {
-    my ($format) = @_; 
-
-    return undef if !$format;
-
-    my $info = $login_formatter_hash->{$format};
-    return undef if !$info;
-
-    return $info->{func};
-}
-
-
-# server implementation
 
 sub log_request {
     my ($self, $reqstate) = @_;
@@ -141,28 +90,6 @@ sub log_aborted_request {
     }
 
     $self->log_request($reqstate);
-}
-
-sub extract_auth_cookie {
-    my ($cookie, $cookie_name) = @_;
-
-    return undef if !$cookie;
-
-    my $ticket = ($cookie =~ /(?:^|\s)\Q$cookie_name\E=([^;]*)/)[0];
-
-    if ($ticket && $ticket =~ m/^PVE%3A/) {
-	$ticket = uri_unescape($ticket);
-    }
-
-    return $ticket;
-}
-
-sub create_auth_cookie {
-    my ($ticket, $cookie_name) = @_;
-
-    my $encticket = uri_escape($ticket);
-
-    return "${cookie_name}=$encticket; path=/; secure;";
 }
 
 sub cleanup_reqstate {
@@ -606,7 +533,7 @@ sub proxy_request {
 	    PVEClientIP => $clientip,
 	};
 
-	$headers->{'cookie'} = create_auth_cookie($ticket, $self->{cookie_name}) if $ticket;
+	$headers->{'cookie'} = PVE::APIServer::Formatter::create_auth_cookie($ticket, $self->{cookie_name}) if $ticket;
 	$headers->{'CSRFPreventionToken'} = $token if $token;
 	$headers->{'Accept-Encoding'} = 'gzip' if $reqstate->{accept_gzip};
 
@@ -730,7 +657,7 @@ sub handle_api2_request {
 
 	my ($rel_uri, $format) = &$split_abs_uri($path, $self->{base_uri});
 
-	my $formatter = get_formatter($format);
+	my $formatter = PVE::APIServer::Formatter::get_formatter($format);
 
 	if (!defined($formatter)) {
 	    $self->error($reqstate, HTTP_NOT_IMPLEMENTED, "no such uri $rel_uri, $format");
@@ -1256,7 +1183,7 @@ sub unshift_read_header {
 		} elsif ($path =~ m/^\Q$base_uri\E/) {
 		    my $token = $r->header('CSRFPreventionToken');
 		    my $cookie = $r->header('Cookie');
-		    my $ticket = extract_auth_cookie($cookie, $self->{cookie_name});
+		    my $ticket = PVE::APIServer::Formatter::extract_auth_cookie($cookie, $self->{cookie_name});
 
 		    my ($rel_uri, $format) = &$split_abs_uri($path, $self->{base_uri});
 		    if (!$format) {
@@ -1276,7 +1203,7 @@ sub unshift_read_header {
 		    if (my $err = $@) {
 			# always delay unauthorized calls by 3 seconds
 			my $delay = 3;
-			if (my $formatter = get_login_formatter($format)) {
+			if (my $formatter = PVE::APIServer::Formatter::get_login_formatter($format)) {
 			    my ($raw, $ct, $nocomp) = &$formatter($path, $auth);
 			    my $resp;
 			    if (ref($raw) && (ref($raw) eq 'HTTP::Response')) {
