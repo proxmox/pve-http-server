@@ -1,4 +1,4 @@
-package PVE::AsyncHTTPServer;
+package PVE::APIServer::AnyEvent;
 
 use strict;
 use warnings;

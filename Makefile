@@ -20,8 +20,8 @@ deb ${DEB}:
 	lintian ${DEB}
 
 install:
-	install -d -m 755 ${PERL5DIR}/PVE/
-	install -m 0644 PVE/AsyncHTTPServer.pm ${PERL5DIR}/PVE
+	install -d -m 755 ${PERL5DIR}/PVE/APIServer
+	install -m 0644 PVE/APIServer/AnyEvent.pm ${PERL5DIR}/PVE/APIServer
 
 .PHONY: upload
 upload: ${DEB}
