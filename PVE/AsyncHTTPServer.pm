@@ -1246,7 +1246,7 @@ sub unshift_read_header {
 		my $auth = {};
 		if ($self->{spiceproxy}) {
 		    my $connect_str = $r->header('Host');
-		    my ($vmid, $node, $port) = PVE::AccessControl::verify_spice_connect_url($connect_str);
+		    my ($vmid, $node, $port) = $self->verify_spice_connect_url($connect_str);
 		    if (!(defined($vmid) && $node && $port)) {
 			$self->error($reqstate, HTTP_UNAUTHORIZED, "invalid ticket");
 			return;
@@ -1728,6 +1728,14 @@ sub new {
 }
 
 # abstract functions - subclass should overwrite/implement them
+
+sub verify_spice_connect_url {
+    my ($self, $connect_str) = @_;
+
+    die "implement me";
+
+    #return ($vmid, $node, $port);
+}
 
 sub auth_handler {
     my ($self, $method, $rel_uri, $ticket, $token) = @_;
