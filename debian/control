@@ -8,6 +8,6 @@ Homepage: http://www.proxmox.com
 
 Package: libpve-http-server-perl
 Architecture: all
-Depends: ${misc:Depends}, libio-socket-ssl-perl, libjson-perl, libcrypt-ssleay-perl, libhttp-message-perl, liburi-perl, libanyevent-perl, libanyevent-http-perl
+Depends: ${misc:Depends}, libnet-ip-perl, libio-socket-ssl-perl, libjson-perl, libcrypt-ssleay-perl, libhttp-date-perl, libhttp-message-perl, liburi-perl, libanyevent-perl, libanyevent-http-perl, libpve-common-perl
 Description: Proxmox Asynchrounous HTTP Server Implementation
  This is used to implement the PVE REST API.
