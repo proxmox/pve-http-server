@@ -1636,6 +1636,12 @@ sub atfork_handler {
     warn $@ if $@;
 }
 
+sub run {
+    my ($self) = @_;
+
+    $self->{end_cond}->recv;
+}
+
 sub new {
     my ($this, %args) = @_;
 
@@ -1721,6 +1727,8 @@ sub new {
     return $self;
 }
 
+# abstract functions - subclass should overwrite/implement them
+
 sub auth_handler {
     my ($self, $method, $rel_uri, $ticket, $token) = @_;
 
@@ -1766,10 +1774,5 @@ sub remote_node_ip {
     # return $remip;
 }
 
-sub run {
-    my ($self) = @_;
-
-    $self->{end_cond}->recv;
-}
 
 1;
