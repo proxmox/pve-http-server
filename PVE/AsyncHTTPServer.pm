@@ -1,4 +1,4 @@
-package PVE::HTTPServer;
+package PVE::AsyncHTTPServer;
 
 use strict;
 use warnings;
