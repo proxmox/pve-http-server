@@ -738,7 +738,8 @@ sub handle_api2_request {
 	    $delay = 0 if $delay < 0;
 	}
 
-	my ($raw, $ct, $nocomp) = &$formatter($res, $res->{data}, $params, $path, $auth);
+	my $csrfgen_func = $self->can('generate_csrf_prevention_token');
+	my ($raw, $ct, $nocomp) = &$formatter($res, $res->{data}, $params, $path, $auth, $csrfgen_func);
 
 	my $resp;
 	if (ref($raw) && (ref($raw) eq 'HTTP::Response')) {
@@ -1658,6 +1659,13 @@ sub verify_spice_connect_url {
     #return ($vmid, $node, $port);
 }
 
+# formatters can call this when the generate a new page
+sub generate_csrf_prevention_token {
+    my ($username) = @_;
+
+    return undef; # do nothing by default
+}
+
 sub auth_handler {
     my ($self, $method, $rel_uri, $ticket, $token) = @_;
 
@@ -1672,7 +1680,6 @@ sub auth_handler {
     #    cookie_name => $self->{cookie_name},
     #};
 }
-
 
 sub rest_handler {
     my ($self, $clientip, $method, $rel_uri, $auth, $params) = @_;

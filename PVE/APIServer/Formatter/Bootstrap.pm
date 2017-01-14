@@ -6,8 +6,6 @@ use URI::Escape;
 use HTML::Entities;
 use JSON;
 
-use PVE::AccessControl; # to generate CSRF token
-
 # Helpers to generate simple html pages using Bootstrap markup.
 
 my $jssrc = <<_EOJS;
@@ -64,15 +62,15 @@ PVE = {
 _EOJS
 
 sub new {
-    my ($class, $res, $url, $auth) = @_;
+    my ($class, $res, $url, $auth, $csrfgen_func) = @_;
 
     my $self = bless {
 	url => $url,
 	js => '',
     };
 
-    if (my $username = $res->{auth}->{userid}) {
-	$self->{csrftoken} = PVE::AccessControl::assemble_csrf_prevention_token($username);
+    if (my $username = $auth->{userid}) {
+	$self->{csrftoken} = &$csrfgen_func($username);
     }
 
     return $self;

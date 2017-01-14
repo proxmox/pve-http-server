@@ -167,14 +167,14 @@ PVE::APIServer::Formatter::register_login_formatter($portal_format, sub {
 });
 
 PVE::APIServer::Formatter::register_formatter($portal_format, sub {
-    my ($res, $data, $param, $path, $auth) = @_;
+    my ($res, $data, $param, $path, $auth, $csrfgen_func) = @_;
 
     # fixme: clumsy!
     PVE::APIServer::Formatter::Standard::prepare_response_data($portal_format, $res);
     $data = $res->{data};
 
     my $html = '';
-    my $doc = PVE::APIServer::Formatter::Bootstrap->new($res, $path, $auth);
+    my $doc = PVE::APIServer::Formatter::Bootstrap->new($res, $path, $auth, $csrfgen_func);
 
     if (!HTTP::Status::is_success($res->{status})) {
 	$html .= $doc->alert(text => "Error $res->{status}: $res->{message}");
@@ -248,9 +248,9 @@ PVE::APIServer::Formatter::register_page_formatter(
     method => 'GET',
     path => "/access/ticket",
     code => sub {
-	my ($res, $data, $param, $path, $auth) = @_;
+	my ($res, $data, $param, $path, $auth, $csrfgen_func) = @_;
 
-	my $doc = PVE::APIServer::Formatter::Bootstrap->new($res, $path, $auth);
+	my $doc = PVE::APIServer::Formatter::Bootstrap->new($res, $path, $auth, $csrfgen_func);
 
 	my $html = &$login_form($doc);
 
@@ -263,7 +263,7 @@ PVE::APIServer::Formatter::register_page_formatter(
     method => 'POST',
     path => "/access/ticket",
     code => sub {
-	my ($res, $data, $param, $path, $auth) = @_;
+	my ($res, $data, $param, $path, $auth, $csrfgen_func) = @_;
 
 	if (HTTP::Status::is_success($res->{status})) {
 	    my $cookie = PVE::APIServer::Formatter::create_auth_cookie(
@@ -277,7 +277,7 @@ PVE::APIServer::Formatter::register_page_formatter(
 	# Note: HTTP server redirects to 'GET /access/ticket', so below
 	# output is not really visible.
 
-	my $doc = PVE::APIServer::Formatter::Bootstrap->new($res, $path, $auth);
+	my $doc = PVE::APIServer::Formatter::Bootstrap->new($res, $path, $auth, $csrfgen_func);
 
 	my $html = &$login_form($doc);
 
