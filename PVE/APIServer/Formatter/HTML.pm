@@ -170,11 +170,11 @@ PVE::APIServer::Formatter::register_formatter($portal_format, sub {
     my ($res, $data, $param, $path, $auth) = @_;
 
     # fixme: clumsy!
-    PVE::API2::Formatter::Standard::prepare_response_data($portal_format, $res);
+    PVE::APIServer::Formatter::Standard::prepare_response_data($portal_format, $res);
     $data = $res->{data};
 
     my $html = '';
-    my $doc = PVE::API2::Formatter::Bootstrap->new($res, $path);
+    my $doc = PVE::APIServer::Formatter::Bootstrap->new($res, $path);
 
     if (!HTTP::Status::is_success($res->{status})) {
 	$html .= $doc->alert(text => "Error $res->{status}: $res->{message}");
@@ -243,14 +243,14 @@ PVE::APIServer::Formatter::register_formatter($portal_format, sub {
     return ($raw, $portal_ct);
 });
 
-PVE::RESTHandler->register_page_formatter(
+PVE::APIServer::Formatter::register_page_formatter(
     'format' => $portal_format,
     method => 'GET',
     path => "/access/ticket",
     code => sub {
 	my ($res, $data, $param, $path, $auth) = @_;
 
-	my $doc = PVE::API2::Formatter::Bootstrap->new($res, $path);
+	my $doc = PVE::APIServer::Formatter::Bootstrap->new($res, $path);
 
 	my $html = &$login_form($doc);
 
@@ -258,7 +258,7 @@ PVE::RESTHandler->register_page_formatter(
 	return ($raw, $portal_ct);
     });
 
-PVE::RESTHandler->register_page_formatter(
+PVE::APIServer::Formatter::register_page_formatter(
     'format' => $portal_format,
     method => 'POST',
     path => "/access/ticket",

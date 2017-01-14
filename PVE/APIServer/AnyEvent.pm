@@ -657,7 +657,7 @@ sub handle_api2_request {
 
 	my ($rel_uri, $format) = &$split_abs_uri($path, $self->{base_uri});
 
-	my $formatter = PVE::APIServer::Formatter::get_formatter($format);
+	my $formatter = PVE::APIServer::Formatter::get_formatter($format, $method, $rel_uri);
 
 	if (!defined($formatter)) {
 	    $self->error($reqstate, HTTP_NOT_IMPLEMENTED, "no such uri $rel_uri, $format");
@@ -736,12 +736,6 @@ sub handle_api2_request {
 	    # always delay unauthorized calls by 3 seconds
 	    $delay = 3 - tv_interval($reqstate->{starttime});
 	    $delay = 0 if $delay < 0;
-	}
-
-	if ($res->{info} && $res->{info}->{formatter}) {
-	    if (defined(my $func = $res->{info}->{formatter}->{$format})) {
-		$formatter = $func;
-	    }
 	}
 
 	my ($raw, $ct, $nocomp) = &$formatter($res, $res->{data}, $params, $path, $auth);
