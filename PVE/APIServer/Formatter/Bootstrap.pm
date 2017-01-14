@@ -64,7 +64,7 @@ PVE = {
 _EOJS
 
 sub new {
-    my ($class, $res, $url) = @_;
+    my ($class, $res, $url, $auth) = @_;
 
     my $self = bless {
 	url => $url,

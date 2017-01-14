@@ -174,7 +174,7 @@ PVE::APIServer::Formatter::register_formatter($portal_format, sub {
     $data = $res->{data};
 
     my $html = '';
-    my $doc = PVE::APIServer::Formatter::Bootstrap->new($res, $path);
+    my $doc = PVE::APIServer::Formatter::Bootstrap->new($res, $path, $auth);
 
     if (!HTTP::Status::is_success($res->{status})) {
 	$html .= $doc->alert(text => "Error $res->{status}: $res->{message}");
@@ -250,7 +250,7 @@ PVE::APIServer::Formatter::register_page_formatter(
     code => sub {
 	my ($res, $data, $param, $path, $auth) = @_;
 
-	my $doc = PVE::APIServer::Formatter::Bootstrap->new($res, $path);
+	my $doc = PVE::APIServer::Formatter::Bootstrap->new($res, $path, $auth);
 
 	my $html = &$login_form($doc);
 
@@ -277,7 +277,7 @@ PVE::APIServer::Formatter::register_page_formatter(
 	# Note: HTTP server redirects to 'GET /access/ticket', so below
 	# output is not really visible.
 
-	my $doc = PVE::APIServer::Formatter::Bootstrap->new($res, $path);
+	my $doc = PVE::APIServer::Formatter::Bootstrap->new($res, $path, $auth);
 
 	my $html = &$login_form($doc);
 
