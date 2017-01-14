@@ -6,61 +6,55 @@ use URI::Escape;
 use HTML::Entities;
 use JSON;
 
-# FIXME: cookie_name
-# FIXME: console code??
+# FIXME: remove console code??
 
 # Helpers to generate simple html pages using Bootstrap markup.
 
 my $jssrc = <<_EOJS;
-PVE = {
-    delete_auth_cookie: function() {
-	document.cookie = "PVEAuthCookie=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=/; secure;";
-    },
-    open_vm_console: function(node, vmid) {
-	console.log("open vm " + vmid + " on node " + node);
+PVE.open_vm_console = function(node, vmid) {
+    console.log("open vm " + vmid + " on node " + node);
 
-	var downloadWithName = function(uri, name) {
-	    var link =  jQuery('#pve_console_anchor');
-	    link.attr("href", uri);
+    var downloadWithName = function(uri, name) {
+	var link =  jQuery('#pve_console_anchor');
+	link.attr("href", uri);
 
-	    // Note: we need to tell android the correct file name extension
-	    // but we do not set 'download' tag for other environments, because
-	    // It can have strange side effects (additional user prompt on firefox)
-	    var andriod = navigator.userAgent.match(/Android/i) ? true : false;
-	    if (andriod) {
-		link.attr("download", name);
-	    }
+	// Note: we need to tell android the correct file name extension
+	// but we do not set 'download' tag for other environments, because
+	// It can have strange side effects (additional user prompt on firefox)
+	var andriod = navigator.userAgent.match(/Android/i) ? true : false;
+	if (andriod) {
+	    link.attr("download", name);
+	}
 
-	    if (document.createEvent) {
-               var evt = document.createEvent("MouseEvents");
-                evt.initMouseEvent('click', true, true, window, 1, 0, 0, 0, 0, false, false, false, false, 0, null);
-		link.get(0).dispatchEvent(evt);
-	    } else {
-		link.get(0).fireEvent('onclick');
-	    }
-	};
+	if (document.createEvent) {
+	    var evt = document.createEvent("MouseEvents");
+	    evt.initMouseEvent('click', true, true, window, 1, 0, 0, 0, 0, false, false, false, false, 0, null);
+	    link.get(0).dispatchEvent(evt);
+	} else {
+	    link.get(0).fireEvent('onclick');
+	}
+    };
 
-	jQuery.ajax("/api2/json/console", {
-	    data: { vmid: vmid, node: node },
-	    headers: { CSRFPreventionToken: PVE.CSRFPreventionToken },
-	    dataType: 'json',
-	    type: 'POST',
-	    error: function(jqXHR, textStatus, errorThrown) {
-		// fixme: howto view JS errors ?
-		console.log("ERROR " +  textStatus + ": " + errorThrown);
-	    },
-	    success:   function(data) {
-		var raw = "[virt-viewer]\\n";
-		jQuery.each(data.data, function(k, v) {
-		    raw += k + "=" + v + "\\n";
-		});
-		var url = 'data:application/x-virt-viewer;charset=UTF-8,' +
-		    encodeURIComponent(raw);
+    jQuery.ajax("/api2/json/console", {
+      data: { vmid: vmid, node: node },
+      headers: { CSRFPreventionToken: PVE.CSRFPreventionToken },
+      dataType: 'json',
+      type: 'POST',
+      error: function(jqXHR, textStatus, errorThrown) {
+	  // fixme: howto view JS errors ?
+	  console.log("ERROR " +  textStatus + ": " + errorThrown);
+      },
+      success:   function(data) {
+	  var raw = "[virt-viewer]\\n";
+	  jQuery.each(data.data, function(k, v) {
+	      raw += k + "=" + v + "\\n";
+	  });
+	  var url = 'data:application/x-virt-viewer;charset=UTF-8,' +
+	      encodeURIComponent(raw);
 
-		downloadWithName(url, "pve-spice.vv");
-	    }
-	});
-    }
+	  downloadWithName(url, "pve-spice.vv");
+      }
+    });
 };
 _EOJS
 
@@ -70,6 +64,7 @@ sub new {
     my $self = bless {
 	url => $url,
 	title => $title,
+	cookie_name => $auth->{cookie_name},
 	js => '',
     };
 
@@ -83,11 +78,18 @@ sub new {
 sub body {
     my ($self, $html) = @_;
 
-    my $jssetup = '';
+    my $jssetup = "PVE = {};\n\n"; # create namespace
 
     if ($self->{csrftoken}) {
 	$jssetup .= "PVE.CSRFPreventionToken = '$self->{csrftoken}';\n";
     }
+
+    $jssetup .= "PVE.delete_auth_cookie = function() {\n";
+
+    if ($self->{cookie_name}) {
+	$jssetup .= "  document.cookie = \"$self->{cookie_name}=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=/; secure;\";\n";
+    };
+    $jssetup .= "};\n";
 
     return <<_EOD;
 <!DOCTYPE html>
@@ -101,10 +103,10 @@ sub body {
     <!-- Bootstrap -->
     <link href="/css/bootstrap.min.css" rel="stylesheet">
 
-    <script type="text/javascript">
-    $jssrc
-    $jssetup
-    </script>
+<script type="text/javascript">
+$jssetup
+$jssrc
+</script>
 
     <style>
 body {
