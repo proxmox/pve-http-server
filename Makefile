@@ -25,6 +25,9 @@ BTDATA = 							\
 	${BTDIR}/js/bootstrap.min.js				\
 	${BTDIR}/fonts/glyphicons-halflings-regular.ttf
 
+JQVER=3.3.1
+JQSRC=jquery-${JQVER}.min.js
+
 all: ${DEB}
 
 .PHONY: deb
@@ -40,6 +43,11 @@ download_bootstrap:
 	wget https://github.com/twbs/bootstrap/releases/download/v${BTVER}/${BTSRC} -O ${BTSRC}.tmp
 	mv ${BTSRC}.tmp ${BTSRC}
 
+download_jquery:
+	rm -f ${JQSRC} ${JQSRC}.tmp
+	wget https://code.jquery.com/jquery-3.1.1.min.js -O ${JQSRC}.tmp
+	mv ${JQSRC}.tmp ${JQSRC}
+
 ${BTDATA}: ${BTSRC}
 	rm -rf ${BTDIR}
 	unzip -x ${BTSRC}
@@ -53,13 +61,14 @@ install: ${BTDATA}
 	install -m 0644 PVE/APIServer/Formatter/Standard.pm ${PERL5DIR}/PVE/APIServer/Formatter
 	install -m 0644 PVE/APIServer/Formatter/Bootstrap.pm ${PERL5DIR}/PVE/APIServer/Formatter
 	install -m 0644 PVE/APIServer/Formatter/HTML.pm ${PERL5DIR}/PVE/APIServer/Formatter
-	# install bootstrap
+	# install bootstrap and jquery
 	install -d -m 755 ${WWWBASEDIR}
 	install -d -m 755 ${WWWCSSDIR}
 	install -m 0644 -o www-data -g www-data ${BTDIR}/css/bootstrap.min.css ${WWWCSSDIR}
 	install -m 0644 -o www-data -g www-data ${BTDIR}/css/bootstrap-theme.min.css ${WWWCSSDIR}
 	install -d -m 755 ${WWWJSDIR}
 	install -m 0644 -o www-data -g www-data ${BTDIR}/js/bootstrap.min.js ${WWWJSDIR}
+	install -m 0644 -o www-data -g www-data ${JQSRC} ${WWWJSDIR}
 	install -d -m 755 ${WWWFONTSDIR}
 	install -m 0644 ${BTDIR}/fonts/glyphicons-halflings-regular.ttf ${WWWFONTSDIR}
 
