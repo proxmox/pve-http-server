@@ -237,7 +237,7 @@ sub response {
     $res .= $content if $content;
 
     $self->log_request($reqstate, $reqstate->{request});
-    
+
     if ($delay && $delay > 0) {
 	my $w; $w = AnyEvent->timer(after => $delay, cb => sub {
 	    undef $w; # delete reference
@@ -289,7 +289,7 @@ sub send_file_start {
 		die "$!\n";
 	    my $stat = File::stat::stat($fh) ||
 		die "$!\n";
-	    
+
 	    my $mtime = $stat->mtime;
 
 	    if (my $ifmod = $r->header('if-modified-since')) {
@@ -351,9 +351,9 @@ sub websocket_proxy {
 	}
 
 	tcp_connect $remhost, $remport, sub {
-	    my ($fh) = @_ 
+	    my ($fh) = @_
 		or die "connect to '$remhost:$remport' failed: $!";
-	
+
 	    print "$$: CONNECTed to '$remhost:$remport'\n" if $self->{debug};
 
 	    $reqstate->{proxyhdl} = AnyEvent::Handle->new(
@@ -380,7 +380,7 @@ sub websocket_proxy {
 
 	    my $proxyhdlreader = sub {
 		my ($hdl) = @_;
-		
+
 		my $len = length($hdl->{rbuf});
 		my $data = substr($hdl->{rbuf}, 0, $len, '');
 
@@ -399,10 +399,10 @@ sub websocket_proxy {
 		if ($payload_len <= 125) {
 		    $string .= pack 'C', $payload_len;
 		} elsif ($payload_len <= 0xffff) {
-		    $string .= pack 'C', 126; 
+		    $string .= pack 'C', 126;
 		    $string .= pack 'n', $payload_len;
 		} else {
-		    $string .= pack 'C', 127; 
+		    $string .= pack 'C', 127;
 		    $string .= pack 'Q>', $payload_len;
 		}
 		$string .= $payload;
@@ -442,13 +442,13 @@ sub websocket_proxy {
 		    $offset += 8;
 		}
 
-		die "received too large websocket frame (len = $payload_len)\n" 
+		die "received too large websocket frame (len = $payload_len)\n"
 		    if ($payload_len > $max_payload_size) || ($payload_len < 0);
 
 		return if $len < ($offset + 4 + $payload_len);
 
 		my $data = substr($hdl->{rbuf}, 0, $len, ''); # now consume data
-		
+
 		my @mask = (unpack('C', substr($data, $offset+0, 1)),
 			    unpack('C', substr($data, $offset+1, 1)),
 			    unpack('C', substr($data, $offset+2, 1)),
@@ -626,7 +626,7 @@ sub decode_urlencoded {
 	    $res->{$k} = "$old\0$v";
 	} else {
 	    $res->{$k} = $v;
-	}	
+	}
     }
     return $res;
 }
@@ -790,7 +790,7 @@ sub handle_spice_proxy_request {
 	my $remport = $remip ? 3128 : $spiceport;
 
 	tcp_connect $remhost, $remport, sub {
-	    my ($fh) = @_ 
+	    my ($fh) = @_
 		or die "connect to '$remhost:$remport' failed: $!";
 
 	    print "$$: CONNECTed to '$remhost:$remport'\n" if $self->{debug};
@@ -866,7 +866,7 @@ sub handle_spice_proxy_request {
 		$reqstate->{proxyhdl}->push_write($header);
 		$reqstate->{proxyhdl}->push_read(line => sub {
 		    my ($hdl, $line) = @_;
-		    
+
 		    if ($line =~ m!^$proto 200 OK$!) {
 			&$startproxy();
 		    } else {
@@ -894,7 +894,7 @@ sub handle_request {
 
     eval {
 	my $r = $reqstate->{request};
-	
+
 	# disable timeout on handle (we already have all data we need)
 	# we re-enable timeout in response()
 	$reqstate->{hdl}->timeout(0);
@@ -990,14 +990,14 @@ sub file_upload_multipart {
 		}
 	    } else {
 		my $len = length($hdl->{rbuf});
-		substr($hdl->{rbuf}, 0, $len - $rstate->{maxheader}, '') 
+		substr($hdl->{rbuf}, 0, $len - $rstate->{maxheader}, '')
 		    if $len > $rstate->{maxheader}; # skip garbage
 	    }
 	} elsif ($rstate->{phase} == 1) { # inside file - dump until end marker
 	    if ($hdl->{rbuf} =~ s/^(.*?)\015?\012(--\Q$boundary\E(--)? \015?\012(.*))$/$2/xs) {
 		my ($rest, $eof) = ($1, $3);
 		my $len = length($rest);
-		die "write to temporary file failed - $!" 
+		die "write to temporary file failed - $!"
 		    if syswrite($rstate->{outfh}, $rest) != $len;
 		$rstate->{ctx}->add($rest);
 		$rstate->{params}->{filename} = $rstate->{filename};
@@ -1009,7 +1009,7 @@ sub file_upload_multipart {
 		my $wlen = $len - $rstate->{boundlen};
 		if ($wlen > 0) {
 		    my $data = substr($hdl->{rbuf}, 0, $wlen, '');
-		    die "write to temporary file failed - $!" 
+		    die "write to temporary file failed - $!"
 			if syswrite($rstate->{outfh}, $data) != $wlen;
 		    $rstate->{bytes} += $wlen;
 		    $rstate->{ctx}->add($data);
@@ -1029,7 +1029,7 @@ sub file_upload_multipart {
 		    $rstate->{phase} = -1; # skip
 		}
 	    }
-	} else { # skip 
+	} else { # skip
 	    my $len = length($hdl->{rbuf});
 	    substr($hdl->{rbuf}, 0, $len, ''); # empty rbuf
 	}
@@ -1037,15 +1037,15 @@ sub file_upload_multipart {
 	$rstate->{read} += ($startlen - length($hdl->{rbuf}));
 
 	if (!$rstate->{done} && ($rstate->{read} + length($hdl->{rbuf})) >= $rstate->{size}) {
-	    $rstate->{done} = 1; # make sure we dont get called twice 
+	    $rstate->{done} = 1; # make sure we dont get called twice
 	    if ($rstate->{phase} < 0 || !$rstate->{md5sum}) {
-		die "upload failed\n"; 
+		die "upload failed\n";
 	    } else {
 		my $elapsed = tv_interval($rstate->{starttime});
 
 		my $rate = int($rstate->{bytes}/($elapsed*1024*1024));
-		syslog('info', "multipart upload complete " . 
-		       "(size: %d time: %ds rate: %.2fMiB/s md5sum: $rstate->{md5sum})", 
+		syslog('info', "multipart upload complete " .
+		       "(size: %d time: %ds rate: %.2fMiB/s md5sum: $rstate->{md5sum})",
 		       $rstate->{bytes}, $elapsed, $rate);
 		$self->handle_api2_request($reqstate, $auth, $method, $path, $rstate);
 	    }
@@ -1061,13 +1061,13 @@ sub parse_content_type {
     my ($ctype) = @_;
 
     my ($ct, @params) = split(/\s*[;,]\s*/o, $ctype);
-    
+
     foreach my $v (@params) {
 	if ($v =~ m/^\s*boundary\s*=\s*(\S+?)\s*$/o) {
 	    return wantarray ? ($ct, $1) : $ct;
 	}
     }
- 
+
     return  wantarray ? ($ct) : $ct;
 }
 
@@ -1087,7 +1087,7 @@ sub parse_content_disposition {
 	    $filename =~ s/^"(.*)"$/$1/;
 	}
     }
- 
+
     return  wantarray ? ($disp, $name, $filename) : $disp;
 }
 
@@ -1095,7 +1095,7 @@ my $tmpfile_seq_no = 0;
 
 sub get_upload_filename {
     # choose unpredictable tmpfile name
-  
+
     $tmpfile_seq_no++;
     return "/var/tmp/pveupload-" . Digest::MD5::md5_hex($tmpfile_seq_no . time() . $$);
 }
@@ -1230,7 +1230,7 @@ sub unshift_read_header {
 		    my ($ct, $boundary) = parse_content_type($ctype) if $ctype;
 
 		    if ($auth->{isUpload} && !$self->{trusted_env}) {
-			die "upload 'Content-Type '$ctype' not implemented\n" 
+			die "upload 'Content-Type '$ctype' not implemented\n"
 			    if !($boundary && $ct && ($ct eq 'multipart/form-data'));
 
 			die "upload without content length header not supported" if !$len;
@@ -1423,7 +1423,7 @@ sub wait_end_loop {
 
 sub check_host_access {
     my ($self, $clientip) = @_;
-    
+
     my $cip = Net::IP->new($clientip);
 
     my $match_allow = 0;
@@ -1597,8 +1597,8 @@ sub new {
 
     if ($self->{ssl}) {
 	$self->{tls_ctx} = AnyEvent::TLS->new(%{$self->{ssl}});
-	# TODO : openssl >= 1.0.2 supports SSL_CTX_set_ecdh_auto to select a curve depending on 
-	# server and client availability from SSL_CTX_set1_curves. 
+	# TODO : openssl >= 1.0.2 supports SSL_CTX_set_ecdh_auto to select a curve depending on
+	# server and client availability from SSL_CTX_set1_curves.
 	# that way other curves like 25519 can be used.
 	# openssl 1.0.1 can only support 1 curve at a time.
 	my $curve = Net::SSLeay::OBJ_txt2nid('prime256v1');
