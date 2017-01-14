@@ -6,7 +6,6 @@ use URI::Escape;
 use HTML::Entities;
 use JSON;
 
-# FIXME: page title
 # FIXME: cookie_name
 # FIXME: console code??
 
@@ -66,10 +65,11 @@ PVE = {
 _EOJS
 
 sub new {
-    my ($class, $res, $url, $auth, $csrfgen_func) = @_;
+    my ($class, $res, $url, $auth, $csrfgen_func, $title) = @_;
 
     my $self = bless {
 	url => $url,
+	title => $title,
 	js => '',
     };
 
@@ -96,7 +96,7 @@ sub body {
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Proxmox VE API</title>
+    <title>$self->{title}</title>
 
     <!-- Bootstrap -->
     <link href="/css/bootstrap.min.css" rel="stylesheet">

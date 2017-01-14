@@ -740,7 +740,8 @@ sub handle_api2_request {
 	}
 
 	my $csrfgen_func = $self->can('generate_csrf_prevention_token');
-	my ($raw, $ct, $nocomp) = &$formatter($res, $res->{data}, $params, $path, $auth, $csrfgen_func);
+	my ($raw, $ct, $nocomp) = &$formatter($res, $res->{data}, $params, $path,
+					      $auth, $csrfgen_func, $self->{title});
 
 	my $resp;
 	if (ref($raw) && (ref($raw) eq 'HTTP::Response')) {
@@ -1579,6 +1580,7 @@ sub new {
     $self->{cookie_name} //= 'PVEAuthCookie';
     $self->{base_uri} //= "/api2";
     $self->{dirs} //= {};
+    $self->{title} //= 'API Inspector';
 
     my $base = '/usr/share/libpve-http-server-perl';
     add_dirs($self->{dirs}, '/css/' => "$base/css/");

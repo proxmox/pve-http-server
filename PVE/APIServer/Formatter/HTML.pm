@@ -18,7 +18,7 @@ my $baseurl = "/api2/$portal_format";
 my $login_url = "$baseurl/access/ticket";
 
 sub render_page {
-    my ($doc, $html) = @_;
+    my ($doc, $html, $title) = @_;
 
     my $items = [];
 
@@ -31,8 +31,6 @@ sub render_page {
 	    text => "Logout",
 	}};
 
-
-    my $title = "Proxmox VE";
 
     my $nav = $doc->el(
 	class => "navbar navbar-inverse navbar-fixed-top",
@@ -167,14 +165,14 @@ PVE::APIServer::Formatter::register_login_formatter($portal_format, sub {
 });
 
 PVE::APIServer::Formatter::register_formatter($portal_format, sub {
-    my ($res, $data, $param, $path, $auth, $csrfgen_func) = @_;
+    my ($res, $data, $param, $path, $auth, $csrfgen_func, $title) = @_;
 
     # fixme: clumsy!
     PVE::APIServer::Formatter::Standard::prepare_response_data($portal_format, $res);
     $data = $res->{data};
 
     my $html = '';
-    my $doc = PVE::APIServer::Formatter::Bootstrap->new($res, $path, $auth, $csrfgen_func);
+    my $doc = PVE::APIServer::Formatter::Bootstrap->new($res, $path, $auth, $csrfgen_func, $title);
 
     if (!HTTP::Status::is_success($res->{status})) {
 	$html .= $doc->alert(text => "Error $res->{status}: $res->{message}");
@@ -239,7 +237,7 @@ PVE::APIServer::Formatter::register_formatter($portal_format, sub {
 
     $html = $doc->el(class => 'container', html => $html);
 
-    my $raw = render_page($doc, $html);
+    my $raw = render_page($doc, $html, $title);
     return ($raw, $portal_ct);
 });
 
@@ -248,13 +246,13 @@ PVE::APIServer::Formatter::register_page_formatter(
     method => 'GET',
     path => "/access/ticket",
     code => sub {
-	my ($res, $data, $param, $path, $auth, $csrfgen_func) = @_;
+	my ($res, $data, $param, $path, $auth, $csrfgen_func, $title) = @_;
 
-	my $doc = PVE::APIServer::Formatter::Bootstrap->new($res, $path, $auth, $csrfgen_func);
+	my $doc = PVE::APIServer::Formatter::Bootstrap->new($res, $path, $auth, $csrfgen_func, $title);
 
 	my $html = &$login_form($doc);
 
-	my $raw = render_page($doc, $html);
+	my $raw = render_page($doc, $html, $title);
 	return ($raw, $portal_ct);
     });
 
@@ -263,7 +261,7 @@ PVE::APIServer::Formatter::register_page_formatter(
     method => 'POST',
     path => "/access/ticket",
     code => sub {
-	my ($res, $data, $param, $path, $auth, $csrfgen_func) = @_;
+	my ($res, $data, $param, $path, $auth, $csrfgen_func, $title) = @_;
 
 	if (HTTP::Status::is_success($res->{status})) {
 	    my $cookie = PVE::APIServer::Formatter::create_auth_cookie(
@@ -277,11 +275,11 @@ PVE::APIServer::Formatter::register_page_formatter(
 	# Note: HTTP server redirects to 'GET /access/ticket', so below
 	# output is not really visible.
 
-	my $doc = PVE::APIServer::Formatter::Bootstrap->new($res, $path, $auth, $csrfgen_func);
+	my $doc = PVE::APIServer::Formatter::Bootstrap->new($res, $path, $auth, $csrfgen_func, $title);
 
 	my $html = &$login_form($doc);
 
-	my $raw = render_page($doc, $html);
+	my $raw = render_page($doc, $html, $title);
 	return ($raw, $portal_ct);
     });
 
