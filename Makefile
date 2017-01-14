@@ -9,6 +9,22 @@ DESTDIR=
 PERL5DIR=${DESTDIR}/usr/share/perl5
 DOCDIR=${DESTDIR}/usr/share/doc/${PACKAGE}
 
+WWWBASEDIR=${DESTDIR}/usr/share/${PACKAGE}
+WWWCSSDIR=${WWWBASEDIR}/css
+WWWFONTSDIR=${WWWBASEDIR}/fonts
+WWWJSDIR=${WWWBASEDIR}/js
+
+# bootstrap library
+BTVER=3.3.7
+BTDIR=bootstrap-${BTVER}-dist
+BTSRC=${BTDIR}.zip
+
+BTDATA = 							\
+	${BTDIR}/css/bootstrap.min.css				\
+	${BTDIR}/css/bootstrap-theme.min.css			\
+	${BTDIR}/js/bootstrap.min.js				\
+	${BTDIR}/fonts/glyphicons-halflings-regular.ttf
+
 all: ${DEB}
 
 .PHONY: deb
@@ -19,7 +35,17 @@ deb ${DEB}:
 	cd build; dpkg-buildpackage -rfakeroot -b -us -uc
 	lintian ${DEB}
 
-install:
+download_bootstrap:
+	rm -f ${BTSRC}$ ${BTSRC}.tmp
+	wget https://github.com/twbs/bootstrap/releases/download/v${BTVER}/${BTSRC} -O ${BTSRC}.tmp
+	mv ${BTSRC}.tmp ${BTSRC}
+
+${BTDATA}: ${BTSRC}
+	rm -rf ${BTDIR}
+	unzip -x ${BTSRC}
+	touch $@
+
+install: ${BTDATA}
 	install -d -m 755 ${PERL5DIR}/PVE/APIServer
 	install -m 0644 PVE/APIServer/AnyEvent.pm ${PERL5DIR}/PVE/APIServer
 	install -m 0644 PVE/APIServer/Formatter.pm ${PERL5DIR}/PVE/APIServer
@@ -27,6 +53,15 @@ install:
 	install -m 0644 PVE/APIServer/Formatter/Standard.pm ${PERL5DIR}/PVE/APIServer/Formatter
 	install -m 0644 PVE/APIServer/Formatter/Bootstrap.pm ${PERL5DIR}/PVE/APIServer/Formatter
 	install -m 0644 PVE/APIServer/Formatter/HTML.pm ${PERL5DIR}/PVE/APIServer/Formatter
+	# install bootstrap
+	install -d -m 755 ${WWWBASEDIR}
+	install -d -m 755 ${WWWCSSDIR}
+	install -m 0644 -o www-data -g www-data ${BTDIR}/css/bootstrap.min.css ${WWWCSSDIR}
+	install -m 0644 -o www-data -g www-data ${BTDIR}/css/bootstrap-theme.min.css ${WWWCSSDIR}
+	install -d -m 755 ${WWWJSDIR}
+	install -m 0644 -o www-data -g www-data ${BTDIR}/js/bootstrap.min.js ${WWWJSDIR}
+	install -d -m 755 ${WWWFONTSDIR}
+	install -m 0644 ${BTDIR}/fonts/glyphicons-halflings-regular.ttf ${WWWFONTSDIR}
 
 
 .PHONY: upload
@@ -36,7 +71,7 @@ upload: ${DEB}
 distclean: clean
 
 clean:
-	rm -rf ./build *.deb *.changes
+	rm -rf ./build *.deb *.changes ${BTDIR}
 	find . -name '*~' -exec rm {} ';'
 
 .PHONY: dinstall

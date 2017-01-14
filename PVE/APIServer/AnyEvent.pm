@@ -1580,6 +1580,11 @@ sub new {
     $self->{base_uri} //= "/api2";
     $self->{dirs} //= {};
 
+    my $base = '/usr/share/libpve-http-server-perl';
+    add_dirs($self->{dirs}, '/css/' => "$base/css/");
+    add_dirs($self->{dirs}, '/js/' => "$base/js/");
+    add_dirs($self->{dirs}, '/fonts/' => "$base/fonts/");
+
     # init inotify
     PVE::INotify::inotify_init();
 
