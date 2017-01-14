@@ -8,6 +8,7 @@ use POSIX qw(strftime EINTR EAGAIN);
 use Fcntl;
 use IO::File;
 use File::stat qw();
+use File::Find;
 use MIME::Base64;
 use Digest::MD5;
 use Digest::SHA;
@@ -1577,6 +1578,7 @@ sub new {
 
     $self->{cookie_name} //= 'PVEAuthCookie';
     $self->{base_uri} //= "/api2";
+    $self->{dirs} //= {};
 
     # init inotify
     PVE::INotify::inotify_init();
@@ -1647,6 +1649,24 @@ sub new {
     });
 
     return $self;
+}
+
+# static helper to add directory including all subdirs
+# This can be used to setup $self->{dirs}
+sub add_dirs {
+    my ($result_hash, $alias, $subdir) = @_;
+
+    $result_hash->{$alias} = $subdir;
+
+    my $wanted = sub {
+	my $dir = $File::Find::dir;
+	if ($dir =~m!^$subdir(.*)$!) {
+	    my $name = "$alias$1/";
+	    $result_hash->{$name} = "$dir/";
+	}
+    };
+
+    find({wanted => $wanted, follow => 0, no_chdir => 1}, $subdir);
 }
 
 # abstract functions - subclass should overwrite/implement them
