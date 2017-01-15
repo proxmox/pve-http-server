@@ -1557,7 +1557,7 @@ sub new {
 
     my $class = ref($this) || $this;
 
-    foreach my $req (qw(base_handler_class socket lockfh lockfile)) {
+    foreach my $req (qw(socket lockfh lockfile)) {
 	die "misssing required argument '$req'" if !defined($args{$req});
     }
 
