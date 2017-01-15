@@ -59,17 +59,17 @@ PVE.open_vm_console = function(node, vmid) {
 _EOJS
 
 sub new {
-    my ($class, $res, $url, $auth, $csrfgen_func, $title) = @_;
+    my ($class, $res, $url, $auth, $config) = @_;
 
     my $self = bless {
 	url => $url,
-	title => $title,
-	cookie_name => $auth->{cookie_name},
+	title => $config->{title},
+	cookie_name => $config->{cookie_name},
 	js => '',
     };
 
     if (my $username = $auth->{userid}) {
-	$self->{csrftoken} = &$csrfgen_func($username);
+	$self->{csrftoken} = $config->{csrfgen_func}->($username);
     }
 
     return $self;

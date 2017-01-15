@@ -733,9 +733,8 @@ sub handle_api2_request {
 	    $delay = 0 if $delay < 0;
 	}
 
-	my $csrfgen_func = $self->can('generate_csrf_prevention_token');
-	my ($raw, $ct, $nocomp) = &$formatter($res, $res->{data}, $params, $path,
-					      $auth, $csrfgen_func, $self->{title});
+	my ($raw, $ct, $nocomp) = $formatter->($res, $res->{data}, $params, $path,
+					       $auth, $self->{formatter_config});
 
 	my $resp;
 	if (ref($raw) && (ref($raw) eq 'HTTP::Response')) {
@@ -1187,7 +1186,8 @@ sub unshift_read_header {
 			# always delay unauthorized calls by 3 seconds
 			my $delay = 3;
 			if (my $formatter = PVE::APIServer::Formatter::get_login_formatter($format)) {
-			    my ($raw, $ct, $nocomp) = &$formatter($path, $auth);
+			    my ($raw, $ct, $nocomp) =
+				$formatter->($path, $auth, $self->{formatter_config});
 			    my $resp;
 			    if (ref($raw) && (ref($raw) eq 'HTTP::Response')) {
 				$resp = $raw;
@@ -1568,6 +1568,15 @@ sub new {
     $self->{dirs} //= {};
     $self->{title} //= 'API Inspector';
 
+    # formatter_config: we pass some configuration values to the Formatter
+    $self->{formatter_config} = {};
+    foreach my $p (qw(cookie_name base_uri title)) {
+	$self->{formatter_config}->{$p} = $self->{$p};
+    }
+    $self->{formatter_config}->{csrfgen_func} =
+	$self->can('generate_csrf_prevention_token');
+
+    # add default dirs which includes jquery and bootstrap
     my $base = '/usr/share/libpve-http-server-perl';
     add_dirs($self->{dirs}, '/css/' => "$base/css/");
     add_dirs($self->{dirs}, '/js/' => "$base/js/");
@@ -1690,7 +1699,6 @@ sub auth_handler {
     #    userid => $username,
     #    age => $age,
     #    isUpload => $isUpload,
-    #    cookie_name => $self->{cookie_name},
     #};
 }
 

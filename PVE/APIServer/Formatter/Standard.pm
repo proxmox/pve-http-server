@@ -47,7 +47,7 @@ sub prepare_response_data {
 }
 
 PVE::APIServer::Formatter::register_formatter('json', sub {
-    my ($res, $data, $param, $path, $auth, $csrfgen_func) = @_;
+    my ($res, $data, $param, $path, $auth, $config) = @_;
 
     my $nocomp = 0;
 
@@ -62,7 +62,7 @@ PVE::APIServer::Formatter::register_formatter('json', sub {
 
 
 PVE::APIServer::Formatter::register_formatter('extjs', sub {
-    my ($res, $data, $param, $path, $auth, $csrfgen_func) = @_;
+    my ($res, $data, $param, $path, $auth, $config) = @_;
 
     my $nocomp = 0;
 
@@ -76,7 +76,7 @@ PVE::APIServer::Formatter::register_formatter('extjs', sub {
 });
 
 PVE::APIServer::Formatter::register_formatter('htmljs', sub {
-    my ($res, $data, $param, $path, $auth, $csrfgen_func) = @_;
+    my ($res, $data, $param, $path, $auth, $config) = @_;
 
     my $nocomp = 0;
 
@@ -93,7 +93,7 @@ PVE::APIServer::Formatter::register_formatter('htmljs', sub {
 
 
 PVE::APIServer::Formatter::register_formatter('spiceconfig', sub {
-    my ($res, $data, $param, $path, $auth, $csrfgen_func) = @_;
+    my ($res, $data, $param, $path, $auth, $config) = @_;
 
     my $nocomp = 0;
 
@@ -116,7 +116,7 @@ PVE::APIServer::Formatter::register_formatter('spiceconfig', sub {
 });
 
 PVE::APIServer::Formatter::register_formatter('png', sub {
-    my ($res, $data, $param, $path, $auth, $csrfgen_func) = @_;
+    my ($res, $data, $param, $path, $auth, $config) = @_;
 
     my $nocomp = 1;
 

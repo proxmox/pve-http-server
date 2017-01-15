@@ -14,11 +14,18 @@ use PVE::APIServer::Formatter::Standard;
 my $portal_format = 'html';
 my $portal_ct = 'text/html;charset=UTF-8';
 
-my $baseurl = "/api2/$portal_format";
-my $login_url = "$baseurl/access/ticket";
+my $get_portal_base_url = sub {
+    my ($config) = @_;
+    return "$config->{base_uri}/$portal_format";
+};
+
+my $get_portal_login_url = sub {
+    my ($config) = @_;
+    return "$config->{base_uri}/$portal_format/access/ticket";
+};
 
 sub render_page {
-    my ($doc, $html, $title) = @_;
+    my ($doc, $html, $config) = @_;
 
     my $items = [];
 
@@ -26,11 +33,12 @@ sub render_page {
 	tag => 'li',
 	cn => {
 	    tag => 'a',
-	    href => $login_url,
+	    href => $get_portal_login_url->($config),
 	    onClick => "PVE.delete_auth_cookie();",
 	    text => "Logout",
 	}};
 
+    my $base_url = $get_portal_base_url->($config);
 
     my $nav = $doc->el(
 	class => "navbar navbar-inverse navbar-fixed-top",
@@ -54,8 +62,8 @@ sub render_page {
 			{
 			    tag => 'a',
 			    class => "navbar-brand",
-			    href => $baseurl,
-			    text => $title,
+			    href => $base_url,
+			    text => $config->{title},
 			},
 		    ],
 		},
@@ -76,7 +84,7 @@ sub render_page {
     shift @pcomp; # api2
     shift @pcomp; # $format
 
-    my $href = $baseurl;
+    my $href = $base_url;
     push @$items, { tag => 'li', cn => {
 	tag => 'a',
 	href => $href,
@@ -96,7 +104,7 @@ sub render_page {
 }
 
 my $login_form = sub {
-    my ($doc, $param, $errmsg) = @_;
+    my ($config, $doc, $param, $errmsg) = @_;
 
     $param = {} if !$param;
 
@@ -139,7 +147,7 @@ my $login_form = sub {
 	    tag => 'form',
 	    role => 'form',
 	    method => 'POST',
-	    action => $login_url,
+	    action => $get_portal_login_url->($config),
 	    cn => [
 		{
 		    class => 'form-group',
@@ -158,21 +166,21 @@ my $login_form = sub {
 };
 
 PVE::APIServer::Formatter::register_login_formatter($portal_format, sub {
-    my ($path, $auth) = @_;
+    my ($path, $auth, $config) = @_;
 
-    my $headers = HTTP::Headers->new(Location => $login_url);
+    my $headers = HTTP::Headers->new(Location => $get_portal_login_url->($config));
     return HTTP::Response->new(301, "Moved", $headers);
 });
 
 PVE::APIServer::Formatter::register_formatter($portal_format, sub {
-    my ($res, $data, $param, $path, $auth, $csrfgen_func, $title) = @_;
+    my ($res, $data, $param, $path, $auth, $config) = @_;
 
     # fixme: clumsy!
     PVE::APIServer::Formatter::Standard::prepare_response_data($portal_format, $res);
     $data = $res->{data};
 
     my $html = '';
-    my $doc = PVE::APIServer::Formatter::Bootstrap->new($res, $path, $auth, $csrfgen_func, $title);
+    my $doc = PVE::APIServer::Formatter::Bootstrap->new($res, $path, $auth, $config);
 
     if (!HTTP::Status::is_success($res->{status})) {
 	$html .= $doc->alert(text => "Error $res->{status}: $res->{message}");
@@ -239,7 +247,7 @@ PVE::APIServer::Formatter::register_formatter($portal_format, sub {
 
     $html = $doc->el(class => 'container', html => $html);
 
-    my $raw = render_page($doc, $html, $title);
+    my $raw = render_page($doc, $html, $config);
     return ($raw, $portal_ct);
 });
 
@@ -248,13 +256,13 @@ PVE::APIServer::Formatter::register_page_formatter(
     method => 'GET',
     path => "/access/ticket",
     code => sub {
-	my ($res, $data, $param, $path, $auth, $csrfgen_func, $title) = @_;
+	my ($res, $data, $param, $path, $auth, $config) = @_;
 
-	my $doc = PVE::APIServer::Formatter::Bootstrap->new($res, $path, $auth, $csrfgen_func, $title);
+	my $doc = PVE::APIServer::Formatter::Bootstrap->new($res, $path, $auth, $config);
 
-	my $html = &$login_form($doc);
+	my $html = $login_form->($config, $doc);
 
-	my $raw = render_page($doc, $html, $title);
+	my $raw = render_page($doc, $html, $config);
 	return ($raw, $portal_ct);
     });
 
@@ -263,13 +271,13 @@ PVE::APIServer::Formatter::register_page_formatter(
     method => 'POST',
     path => "/access/ticket",
     code => sub {
-	my ($res, $data, $param, $path, $auth, $csrfgen_func, $title) = @_;
+	my ($res, $data, $param, $path, $auth, $config) = @_;
 
 	if (HTTP::Status::is_success($res->{status})) {
 	    my $cookie = PVE::APIServer::Formatter::create_auth_cookie(
-		$data->{ticket}, $auth->{cookie_name});
+		$data->{ticket}, $config->{cookie_name});
 
-	    my $headers = HTTP::Headers->new(Location => $baseurl,
+	    my $headers = HTTP::Headers->new(Location => $get_portal_base_url->($config),
 					     'Set-Cookie' => $cookie);
 	    return HTTP::Response->new(301, "Moved", $headers);
 	}
@@ -277,11 +285,11 @@ PVE::APIServer::Formatter::register_page_formatter(
 	# Note: HTTP server redirects to 'GET /access/ticket', so below
 	# output is not really visible.
 
-	my $doc = PVE::APIServer::Formatter::Bootstrap->new($res, $path, $auth, $csrfgen_func, $title);
+	my $doc = PVE::APIServer::Formatter::Bootstrap->new($res, $path, $auth, $config);
 
-	my $html = &$login_form($doc);
+	my $html = $login_form->($config, $doc);
 
-	my $raw = render_page($doc, $html, $title);
+	my $raw = render_page($doc, $html, $config);
 	return ($raw, $portal_ct);
     });
 
