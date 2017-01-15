@@ -178,12 +178,14 @@ PVE::APIServer::Formatter::register_formatter($portal_format, sub {
 	$html .= $doc->alert(text => "Error $res->{status}: $res->{message}");
     }
 
-    my $info = $res->{info};
+    my $lnk;
 
-    $html .= $doc->el(tag => 'h3', text => 'Description');
-    $html .= $doc->el(tag => 'p', text => $info->{description});
+    if (my $info = $res->{info}) {
+	$html .= $doc->el(tag => 'h3', text => 'Description');
+	$html .= $doc->el(tag => 'p', text => $info->{description});
 
-    my $lnk = PVE::JSONSchema::method_get_child_link($info);
+	$lnk = PVE::JSONSchema::method_get_child_link($info);
+    }
 
     if ($lnk && $data && $data->{data} && HTTP::Status::is_success($res->{status})) {
 
