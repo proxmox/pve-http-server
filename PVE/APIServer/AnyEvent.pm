@@ -1697,10 +1697,30 @@ sub auth_handler {
 sub rest_handler {
     my ($self, $clientip, $method, $rel_uri, $auth, $params) = @_;
 
+    # please do not raise exceptions here (always return a result).
+
     return {
 	status => HTTP_NOT_IMPLEMENTED,
 	message => "Method '$method $rel_uri' not implemented",
     };
+
+    # this should return the following properties, which
+    # are then passed to the Formatter
+
+    # status: HTTP status code
+    # message: Error message
+    # errors: more detailed error hash (per parameter)
+    # info: reference to JSON schema definition - useful to format output
+    # data: result data
+
+    # total: additional info passed to output
+    # changes:  additional info passed to output
+
+    # if you want to proxy the request to another node return this
+    # { proxy => $remip, proxynode => $node, proxy_params => $params };
+
+    # to pass the request to the local priviledged daemon use:
+    # { proxy => 'localhost' , proxy_params => $params };
 }
 
 sub check_cert_fingerprint {
