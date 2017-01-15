@@ -667,8 +667,6 @@ sub handle_api2_request {
 
 	#print Dumper($upload_state) if $upload_state;
 
-	my $rpcenv = $self->{rpcenv};
-
 	my $params;
 
 	if ($upload_state) {
@@ -681,13 +679,9 @@ sub handle_api2_request {
 
 	my $clientip = $reqstate->{peer_host};
 
-	$rpcenv->init_request();
-
 	my $res = $self->rest_handler($clientip, $method, $rel_uri, $auth, $params);
 
 	AnyEvent->now_update(); # in case somebody called sleep()
-
-	$rpcenv->set_user(undef); # clear after request
 
 	my $upgrade = $r->header('upgrade');
 	$upgrade = lc($upgrade) if $upgrade;
@@ -764,9 +758,6 @@ sub handle_spice_proxy_request {
     eval {
 
         die "Port $spiceport is not allowed" if ($spiceport < 61000 || $spiceport > 61099);
-
-	my $rpcenv = $self->{rpcenv};
-	$rpcenv->init_request();
 
 	my $clientip = $reqstate->{peer_host};
 	my $r = $reqstate->{request};
@@ -1188,14 +1179,9 @@ sub unshift_read_header {
 			return;
 		    }
 
-		    my $rpcenv = $self->{rpcenv};
-		    # set environment variables
-		    $rpcenv->set_user(undef);
-		    $rpcenv->set_language('C');
-		    $rpcenv->set_client_ip($reqstate->{peer_host});
-
 		    eval {
-			$auth = $self->auth_handler($method, $rel_uri, $ticket, $token);
+			$auth = $self->auth_handler($method, $rel_uri, $ticket, $token,
+						    $reqstate->{peer_host});
 		    };
 		    if (my $err = $@) {
 			# always delay unauthorized calls by 3 seconds
@@ -1694,7 +1680,7 @@ sub generate_csrf_prevention_token {
 }
 
 sub auth_handler {
-    my ($self, $method, $rel_uri, $ticket, $token) = @_;
+    my ($self, $method, $rel_uri, $ticket, $token, $peer_host) = @_;
 
     die "implement me";
 
