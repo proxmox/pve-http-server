@@ -1,3 +1,25 @@
+libpve-http-server-perl (1.0-2) unstable; urgency=medium
+
+  * simple-demo.pl: simple demo server for testing
+
+  * extract_auth_cookie: always call uri_unescape($ticket)
+
+  * use canonical flag for json format
+
+  * remove base_handler_class from required arguments
+
+  * remove all references to rpcenv
+
+  * include jquery and bootstrap
+
+  * new helper add_dirs
+
+  * add new hook function to generate CSRF token
+
+  * add generic formatter framework
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 16 Jan 2017 18:39:21 +0100
+
 libpve-http-server-perl (1.0-1) unstable; urgency=medium
 
   * first try
