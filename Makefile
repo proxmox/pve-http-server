@@ -28,14 +28,13 @@ BTDATA = 							\
 JQVER=3.3.1
 JQSRC=jquery-${JQVER}.min.js
 
-all: ${DEB}
+all:
 
 .PHONY: deb
 deb ${DEB}:
 	rm -rf build
-	rsync -a debian build
-	make DESTDIR=./build install
-	cd build; dpkg-buildpackage -rfakeroot -b -us -uc
+	rsync -a * build
+	cd build; dpkg-buildpackage -b -us -uc
 	lintian ${DEB}
 
 download_bootstrap:
