@@ -79,7 +79,7 @@ upload: ${DEB}
 distclean: clean
 
 clean:
-	rm -rf ./build *.deb *.changes ${BTDIR}
+	rm -rf ./build *.deb *.changes ${BTDIR} simple-demo.pem simple-demo.lck
 	find . -name '*~' -exec rm {} ';'
 
 .PHONY: dinstall
