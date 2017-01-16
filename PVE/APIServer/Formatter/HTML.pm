@@ -235,13 +235,13 @@ PVE::APIServer::Formatter::register_formatter($portal_format, sub {
 
 	} else {
 
-	    my $json = to_json($data, {allow_nonref => 1, pretty => 1});
+	    my $json = to_json($data, {allow_nonref => 1, pretty => 1, canonical => 1});
 	    $html .= $doc->el(tag => 'pre', text => $json);
  	}
 
     } else {
 
-	my $json = to_json($data, {allow_nonref => 1, pretty => 1});
+	my $json = to_json($data, {allow_nonref => 1, pretty => 1, canonical => 1});
 	$html .= $doc->el(tag => 'pre', text => $json);
     }
 
