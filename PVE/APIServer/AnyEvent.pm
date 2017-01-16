@@ -661,7 +661,7 @@ sub handle_api2_request {
 	my $formatter = PVE::APIServer::Formatter::get_formatter($format, $method, $rel_uri);
 
 	if (!defined($formatter)) {
-	    $self->error($reqstate, HTTP_NOT_IMPLEMENTED, "no such uri $rel_uri, $format");
+	    $self->error($reqstate, HTTP_NOT_IMPLEMENTED, "no formatter for uri $rel_uri, $format");
 	    return;
 	}
 
