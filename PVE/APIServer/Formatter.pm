@@ -82,9 +82,7 @@ sub extract_auth_cookie {
 
     my $ticket = ($cookie =~ /(?:^|\s)\Q$cookie_name\E=([^;]*)/)[0];
 
-    if ($ticket && $ticket =~ m/^PVE%3A/) {
-	$ticket = uri_unescape($ticket);
-    }
+    $ticket = uri_unescape($ticket) if $ticket;
 
     return $ticket;
 }
