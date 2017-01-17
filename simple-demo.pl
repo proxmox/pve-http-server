@@ -19,7 +19,27 @@ my $secret = Digest::MD5::md5_base64($$ . time());
 sub create_ticket {
     my ($username) = @_;
 
-    return "$username:$secret";
+    my $salt = sprintf("%08x", time());
+    my $data = "$username:$salt";
+    my $sig = Digest::MD5::md5_base64("$data:$secret");
+    return "$username:$salt:$sig";
+}
+
+sub verify_ticket {
+    my ($ticket) = @_;
+
+    die "no ticket" if !defined($ticket);
+    my ($userid, $salt, $rest) = split(/:/, $ticket, 3);
+
+    die "invalid ticket" if !defined($salt) || !defined($rest);
+
+    die "invalid unsername" if $userid ne 'demo';
+
+    my $sig = Digest::MD5::md5_base64("$userid:$salt:$secret");
+
+    die "invalid ticket" if $rest ne $sig;
+
+    return $userid;
 }
 
 sub auth_handler {
@@ -31,12 +51,8 @@ sub auth_handler {
 	return; # allow call to create ticket
     }
 
-    die "no ticket" if !defined($ticket);
+    my $userid = verify_ticket($ticket);
 
-    my ($userid, $rest) = split(/:/, $ticket, 2);
-    die "invalid unsername" if $userid ne 'demo';
-    die "invalid ticket" if $rest ne $secret;
-    
     return {
 	ticket => $ticket,
 	userid => $userid,
