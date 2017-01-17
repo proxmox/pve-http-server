@@ -104,10 +104,14 @@ use PVE::APIServer::Formatter::HTML;
 my $nodename = PVE::INotify::nodename();
 my $port = 9999;
 
-if (! -f "simple-demo.pem") {
+my $cert_file = "simple-demo.pem";
+
+if (! -f $cert_file) {
     print "generating demo server certificate\n";
-    my $cmd = ['make-ssl-cert', '/usr/share/ssl-cert/ssleay.cnf',
-	       'simple-demo.pem'];
+    my $cmd = ['openssl', 'req', '-batch', '-x509', '-newkey', 'rsa:4096',
+	       '-nodes', '-keyout', $cert_file, '-out', $cert_file,
+	       '-subj', "/CN=Simple Demo Server/OU=$nodename/",
+	       '-days', '3650'];
     run_command($cmd);
 }
 
@@ -134,7 +138,7 @@ my $server = DemoServer->new(
     lockfh => $lockfh,
     title => 'Simple Demo API',
     logfh => \*STDOUT,
-    tls_ctx  => { verify => 0, cert_file => "simple-demo.pem" },
+    tls_ctx  => { verify => 0, cert_file => $cert_file },
     pages => {
 	'/' => sub { get_index($nodename, @_) },
     },
