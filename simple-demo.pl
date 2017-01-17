@@ -110,7 +110,7 @@ if (! -f $cert_file) {
     print "generating demo server certificate\n";
     my $cmd = ['openssl', 'req', '-batch', '-x509', '-newkey', 'rsa:4096',
 	       '-nodes', '-keyout', $cert_file, '-out', $cert_file,
-	       '-subj', "/CN=Simple Demo Server/OU=$nodename/",
+	       '-subj', "/CN=$nodename/",
 	       '-days', '3650'];
     run_command($cmd);
 }
