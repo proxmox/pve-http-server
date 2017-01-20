@@ -1184,6 +1184,11 @@ sub unshift_read_header {
 						    $reqstate->{peer_host});
 		    };
 		    if (my $err = $@) {
+			# HACK!!
+			# Some auth_handlers use Crypt::OpenSSL::RSA, which seems to set the openssl error
+			# variable. We need to clear that here, else AnyEvent::TLS aborts the connection.
+			Net::SSLeay::ERR_clear_error();
+
 			# always delay unauthorized calls by 3 seconds
 			my $delay = 3;
 			if (my $formatter = PVE::APIServer::Formatter::get_login_formatter($format)) {
@@ -1197,7 +1202,7 @@ sub unshift_read_header {
 				$resp->header("Content-Type" => $ct);
 				$resp->content($raw);
 			    }
-			    $self->response($reqstate, $resp, undef, $nocomp, 3);
+			    $self->response($reqstate, $resp, undef, $nocomp, $delay);
 			} else {
 			    my $resp = HTTP::Response->new(HTTP_UNAUTHORIZED, $err);
 			    $self->response($reqstate, $resp, undef, 0, $delay);
