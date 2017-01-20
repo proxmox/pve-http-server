@@ -146,9 +146,10 @@ sub client_do_disconnect {
 sub finish_response {
     my ($self, $reqstate) = @_;
 
-    my $hdl = $reqstate->{hdl};
-
     cleanup_reqstate($reqstate);
+
+    my $hdl = $reqstate->{hdl};
+    return if !$hdl; # already disconnected
 
     if (!$self->{end_loop} && $reqstate->{keep_alive} > 0) {
 	# print "KEEPALIVE $reqstate->{keep_alive}\n" if $self->{debug};
