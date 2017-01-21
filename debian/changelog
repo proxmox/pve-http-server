@@ -1,3 +1,9 @@
+libpve-http-server-perl (1.0-4) unstable; urgency=medium
+
+  * add debian triggers file
+
+ -- Proxmox Support Team <support@proxmox.com>  Sat, 21 Jan 2017 16:36:47 +0100
+
 libpve-http-server-perl (1.0-3) unstable; urgency=medium
 
   * console-demo.pl: add a more complex demo
