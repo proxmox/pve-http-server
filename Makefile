@@ -77,10 +77,10 @@ upload: ${DEB}
 	tar cf - ${DEB} | ssh repoman@repo.proxmox.com upload
 
 distclean: clean
-	rm -f simple-demo.pem
+	rm -f examples/simple-demo.pem
 
 clean:
-	rm -rf ./build *.deb *.changes ${BTDIR} simple-demo.lck
+	rm -rf ./build *.deb *.changes ${BTDIR} examples/simple-demo.lck
 	find . -name '*~' -exec rm {} ';'
 
 .PHONY: dinstall
