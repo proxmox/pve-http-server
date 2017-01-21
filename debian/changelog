@@ -1,3 +1,13 @@
+libpve-http-server-perl (1.0-3) unstable; urgency=medium
+
+  * console-demo.pl: add a more complex demo
+
+  * call Net::SSLeay::ERR_clear_error after all handlers
+
+  * avoid warnings when clients disconnects early
+
+ -- Proxmox Support Team <support@proxmox.com>  Sat, 21 Jan 2017 16:19:20 +0100
+
 libpve-http-server-perl (1.0-2) unstable; urgency=medium
 
   * simple-demo.pl: simple demo server for testing
