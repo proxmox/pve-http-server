@@ -1,5 +1,12 @@
 package PVE::APIServer::AnyEvent;
 
+# Note 1: interactions with Crypt::OpenSSL::RSA
+#
+# Some handlers (auth_handler) use Crypt::OpenSSL::RSA, which seems to
+# set the openssl error variable. We need to clear that here, else
+# AnyEvent::TLS aborts the connection.
+# Net::SSLeay::ERR_clear_error();
+
 use strict;
 use warnings;
 use Time::HiRes qw(usleep ualarm gettimeofday tv_interval);
@@ -682,6 +689,9 @@ sub handle_api2_request {
 
 	my $res = $self->rest_handler($clientip, $method, $rel_uri, $auth, $params);
 
+	# HACK: see Note 1
+	Net::SSLeay::ERR_clear_error();
+
 	AnyEvent->now_update(); # in case somebody called sleep()
 
 	my $upgrade = $r->header('upgrade');
@@ -901,6 +911,8 @@ sub handle_request {
 	    if (ref($handler) eq 'CODE') {
 		my $params = decode_urlencoded($r->url->query());
 		my ($resp, $userid) = &$handler($self, $reqstate->{request}, $params);
+		# HACK: see Note 1
+		Net::SSLeay::ERR_clear_error();
 		$self->response($reqstate, $resp);
 	    } elsif (ref($handler) eq 'HASH') {
 		if (my $filename = $handler->{file}) {
@@ -1184,11 +1196,8 @@ sub unshift_read_header {
 						    $reqstate->{peer_host});
 		    };
 		    if (my $err = $@) {
-			# HACK!!
-			# Some auth_handlers use Crypt::OpenSSL::RSA, which seems to set the openssl error
-			# variable. We need to clear that here, else AnyEvent::TLS aborts the connection.
+			# HACK: see Note 1
 			Net::SSLeay::ERR_clear_error();
-
 			# always delay unauthorized calls by 3 seconds
 			my $delay = 3;
 			if (my $formatter = PVE::APIServer::Formatter::get_login_formatter($format)) {
