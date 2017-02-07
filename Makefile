@@ -31,7 +31,8 @@ JQSRC=jquery-${JQVER}.min.js
 all:
 
 .PHONY: deb
-deb ${DEB}:
+deb: ${DEB}
+${DEB}:
 	rm -rf build
 	rsync -a * build
 	cd build; dpkg-buildpackage -b -us -uc
