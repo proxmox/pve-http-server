@@ -942,7 +942,7 @@ sub handle_request {
 	    }
 	}
 
-	die "no such file '$path'";
+	die "no such file '$path'\n";
     };
     if (my $err = $@) {
 	$self->error($reqstate, 501, $err);
