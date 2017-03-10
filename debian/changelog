@@ -1,3 +1,9 @@
+libpve-http-server-perl (2.0-1) unstable; urgency=medium
+
+  * bump version for debian stretch
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 10 Mar 2017 08:50:55 +0100
+
 libpve-http-server-perl (1.0-4) unstable; urgency=medium
 
   * add debian triggers file
