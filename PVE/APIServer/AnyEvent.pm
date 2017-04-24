@@ -80,7 +80,7 @@ sub log_request {
     my $content_length = defined($loginfo->{content_length}) ? $loginfo->{content_length} : '-';
     my $code =  $loginfo->{code} || 500;
     my $requestline = $loginfo->{requestline} || '-';
-    my $timestr = strftime("%d/%b/%Y:%H:%M:%S %z", localtime());
+    my $timestr = strftime("%d/%m/%Y:%H:%M:%S %z", localtime());
 
     my $msg = "$peerip - $userid [$timestr] \"$requestline\" $code $content_length\n";
 
