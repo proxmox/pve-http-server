@@ -1,6 +1,6 @@
 PACKAGE=libpve-http-server-perl
 PKGVER=2.0
-PKGREL=3
+PKGREL=4
 
 DEB=${PACKAGE}_${PKGVER}-${PKGREL}_all.deb
 

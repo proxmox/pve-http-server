@@ -1,3 +1,9 @@
+libpve-http-server-perl (2.0-4) unstable; urgency=medium
+
+  * assume all parameters are utf8 encoded
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 02 May 2017 11:55:21 +0200
+
 libpve-http-server-perl (2.0-3) unstable; urgency=medium
 
   * avoid locale specific time stamps
