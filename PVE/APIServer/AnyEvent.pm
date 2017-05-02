@@ -29,6 +29,7 @@ use AnyEvent::IO;
 use AnyEvent::HTTP;
 use Fcntl ();
 use Compress::Zlib;
+use Encode;
 use PVE::SafeSyslog;
 use PVE::INotify;
 use PVE::Tools;
@@ -617,6 +618,7 @@ sub proxy_request {
 }
 
 # return arrays as \0 separated strings (like CGI.pm)
+# assume data is UTF8 encoded
 sub decode_urlencoded {
     my ($data) = @_;
 
@@ -630,6 +632,8 @@ sub decode_urlencoded {
 	$k =~ s/%([0-9a-fA-F][0-9a-fA-F])/chr(hex($1))/eg;
 	$v =~s/\+/ /g;
 	$v =~ s/%([0-9a-fA-F][0-9a-fA-F])/chr(hex($1))/eg;
+
+	$v = Encode::decode('utf8', $v);
 
 	if (defined(my $old = $res->{$k})) {
 	    $res->{$k} = "$old\0$v";
@@ -655,7 +659,7 @@ sub extract_params {
 	$params->{$k} = $query_params->{$k};
     }
 
-    return PVE::Tools::decode_utf8_parameters($params);
+    return $params;
 }
 
 sub handle_api2_request {
