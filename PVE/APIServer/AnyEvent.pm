@@ -274,15 +274,19 @@ my $file_extension_info = {
     css   => { ct => 'text/css' },
     html  => { ct => 'text/html' },
     js    => { ct => 'application/javascript' },
+    json  => { ct => 'application/json' },
     png   => { ct => 'image/png' , nocomp => 1 },
     ico   => { ct => 'image/x-icon', nocomp => 1},
     gif   => { ct => 'image/gif', nocomp => 1},
+    svg   => { ct => 'image/svg+xml' },
     jar   => { ct => 'application/java-archive', nocomp => 1},
     woff  => { ct => 'application/font-woff', nocomp => 1},
     woff2 => { ct => 'application/font-woff2', nocomp => 1},
     ttf   => { ct => 'application/font-snft', nocomp => 1},
     pdf   => { ct => 'application/pdf', nocomp => 1},
     epub  => { ct => 'application/epub+zip', nocomp => 1},
+    mp3   => { ct => 'audio/mpeg', nocomp => 1},
+    oga   => { ct => 'audio/ogg', nocomp => 1},
 };
 
 sub send_file_start {
