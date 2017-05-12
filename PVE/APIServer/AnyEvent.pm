@@ -47,7 +47,7 @@ use Data::Dumper;
 
 my $limit_max_headers = 30;
 my $limit_max_header_size = 8*1024;
-my $limit_max_post = 16*1024;
+my $limit_max_post = 64*1024;
 
 my $known_methods = {
     GET => 1,
