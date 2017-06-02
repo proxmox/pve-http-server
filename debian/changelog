@@ -1,3 +1,9 @@
+libpve-http-server-perl (2.0-5) unstable; urgency=medium
+
+  * add json/mp3/oga/svg MIME types for the new novnc
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 02 Jun 2017 12:49:02 +0200
+
 libpve-http-server-perl (2.0-4) unstable; urgency=medium
 
   * assume all parameters are utf8 encoded
