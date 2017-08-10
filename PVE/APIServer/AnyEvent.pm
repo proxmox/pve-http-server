@@ -695,7 +695,7 @@ sub handle_api2_request {
 
 	my $clientip = $reqstate->{peer_host};
 
-	my $res = $self->rest_handler($clientip, $method, $rel_uri, $auth, $params);
+	my $res = $self->rest_handler($clientip, $method, $rel_uri, $auth, $params, $format);
 
 	# HACK: see Note 1
 	Net::SSLeay::ERR_clear_error();
@@ -1718,7 +1718,7 @@ sub auth_handler {
 }
 
 sub rest_handler {
-    my ($self, $clientip, $method, $rel_uri, $auth, $params) = @_;
+    my ($self, $clientip, $method, $rel_uri, $auth, $params, $format) = @_;
 
     # please do not raise exceptions here (always return a result).
 
