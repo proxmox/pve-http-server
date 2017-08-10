@@ -1,3 +1,9 @@
+libpve-http-server-perl (2.0-6) unstable; urgency=medium
+
+  * pass $format to rest_handler()
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 10 Aug 2017 12:05:42 +0200
+
 libpve-http-server-perl (2.0-5) unstable; urgency=medium
 
   * add json/mp3/oga/svg MIME types for the new novnc
