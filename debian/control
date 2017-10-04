@@ -2,12 +2,24 @@ Source: libpve-http-server-perl
 Section: perl
 Priority: optional
 Maintainer: Proxmox Support Team <support@proxmox.com>
-Build-Depends: debhelper (>= 9), perl (>= 5.10.0-19)
+Build-Depends: debhelper (>= 9),
+               perl (>= 5.10.0-19),
 Standards-Version: 3.9.5
 Homepage: http://www.proxmox.com
 
 Package: libpve-http-server-perl
 Architecture: all
-Depends: ${perl:Depends}, libnet-ip-perl, libio-socket-ssl-perl, libjson-perl, libcrypt-ssleay-perl, libhttp-date-perl, libhttp-message-perl, liburi-perl, libhtml-parser-perl, libanyevent-perl, libanyevent-http-perl, libpve-common-perl
+Depends: libanyevent-http-perl,
+         libanyevent-perl,
+         libcrypt-ssleay-perl,
+         libhtml-parser-perl,
+         libhttp-date-perl,
+         libhttp-message-perl,
+         libio-socket-ssl-perl,
+         libjson-perl,
+         libnet-ip-perl,
+         libpve-common-perl,
+         liburi-perl,
+         ${perl:Depends},
 Description: Proxmox Asynchrounous HTTP Server Implementation
  This is used to implement the PVE REST API.
