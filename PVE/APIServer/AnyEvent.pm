@@ -752,6 +752,13 @@ sub handle_api2_request {
 	    $delay = 0 if $delay < 0;
 	}
 
+	if (defined(my $filename = $res->{download})) {
+	    my $fh = IO::File->new($filename) ||
+		die "unable to open file '$filename' - $!\n";
+	    send_file_start($self, $reqstate, $filename);
+	    return;
+	}
+
 	my ($raw, $ct, $nocomp) = $formatter->($res, $res->{data}, $params, $path,
 					       $auth, $self->{formatter_config});
 
@@ -1744,6 +1751,9 @@ sub rest_handler {
 
     # to pass the request to the local priviledged daemon use:
     # { proxy => 'localhost' , proxy_params => $params };
+
+    # to download aspecific file use:
+    # { download => "/path/to/file" };
 }
 
 sub check_cert_fingerprint {
