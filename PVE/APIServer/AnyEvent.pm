@@ -287,6 +287,7 @@ my $file_extension_info = {
     epub  => { ct => 'application/epub+zip', nocomp => 1},
     mp3   => { ct => 'audio/mpeg', nocomp => 1},
     oga   => { ct => 'audio/ogg', nocomp => 1},
+    tgz   => { ct => 'application/x-compressed-tar', nocomp => 1},
 };
 
 sub send_file_start {
