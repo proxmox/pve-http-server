@@ -1,3 +1,13 @@
+libpve-http-server-perl (2.0-7) unstable; urgency=medium
+
+  * add content type application/x-compressed-tar
+
+  * allow API calls to download file contents
+
+  * build: reformat debian/control
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 14 Nov 2017 08:05:17 +0100
+
 libpve-http-server-perl (2.0-6) unstable; urgency=medium
 
   * pass $format to rest_handler()
