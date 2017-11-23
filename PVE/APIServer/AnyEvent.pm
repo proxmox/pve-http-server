@@ -275,6 +275,7 @@ my $file_extension_info = {
     html  => { ct => 'text/html' },
     js    => { ct => 'application/javascript' },
     json  => { ct => 'application/json' },
+    map  => { ct => 'application/json' },
     png   => { ct => 'image/png' , nocomp => 1 },
     ico   => { ct => 'image/x-icon', nocomp => 1},
     gif   => { ct => 'image/gif', nocomp => 1},
