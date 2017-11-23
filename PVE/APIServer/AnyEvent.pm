@@ -484,9 +484,9 @@ sub websocket_proxy {
 		if ($opcode == 1 || $opcode == 2) {
 		    $reqstate->{proxyhdl}->push_write($payload) if $reqstate->{proxyhdl};
 		} elsif ($opcode == 8) {
-		    print "websocket received close\n" if $self->{debug};
+		    my $statuscode = unpack ("n", $payload);
+		    print "websocket received close. status code: '$statuscode'\n" if $self->{debug};
 		    if ($reqstate->{proxyhdl}) {
-			$reqstate->{proxyhdl}->push_write($payload);
 			$reqstate->{proxyhdl}->push_shutdown();
 		    }
 		    $hdl->push_shutdown();
