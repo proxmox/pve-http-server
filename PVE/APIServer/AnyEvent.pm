@@ -1217,7 +1217,14 @@ sub unshift_read_header {
 			Net::SSLeay::ERR_clear_error();
 			# always delay unauthorized calls by 3 seconds
 			my $delay = 3;
-			if (my $formatter = PVE::APIServer::Formatter::get_login_formatter($format)) {
+
+			if (ref($err) eq "PVE::Exception") {
+
+			    $err->{code} ||= HTTP_INTERNAL_SERVER_ERROR,
+			    my $resp = HTTP::Response->new($err->{code}, $err->{msg});
+			    $self->response($reqstate, $resp, undef, 0, $delay);
+
+			} elsif (my $formatter = PVE::APIServer::Formatter::get_login_formatter($format)) {
 			    my ($raw, $ct, $nocomp) =
 				$formatter->($path, $auth, $self->{formatter_config});
 			    my $resp;
