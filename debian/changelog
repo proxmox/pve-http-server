@@ -1,3 +1,13 @@
+libpve-http-server-perl (2.0-8) unstable; urgency=medium
+
+  * auth_handler: handle exceptions correctly instead of always returning 401
+
+  * add 'map' filetype to http-server
+
+  * do not send websocket status code to port
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 11 Dec 2017 15:35:34 +0100
+
 libpve-http-server-perl (2.0-7) unstable; urgency=medium
 
   * add content type application/x-compressed-tar
