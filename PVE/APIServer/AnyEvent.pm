@@ -429,70 +429,71 @@ sub websocket_proxy {
 	    my $hdlreader = sub {
 		my ($hdl) = @_;
 
-		my $len = length($hdl->{rbuf});
-		return if $len < 2;
+		while (my $len = length($hdl->{rbuf})) {
+		    return if $len < 2;
 
-		my $hdr = unpack('C', substr($hdl->{rbuf}, 0, 1));
-		my $opcode = $hdr & 0b00001111;
-		my $fin = $hdr & 0b10000000;
+		    my $hdr = unpack('C', substr($hdl->{rbuf}, 0, 1));
+		    my $opcode = $hdr & 0b00001111;
+		    my $fin = $hdr & 0b10000000;
 
-		die "received fragmented websocket frame\n" if !$fin;
+		    die "received fragmented websocket frame\n" if !$fin;
 
-		my $rsv = $hdr & 0b01110000;
-		die "received websocket frame with RSV flags\n" if $rsv;
+		    my $rsv = $hdr & 0b01110000;
+		    die "received websocket frame with RSV flags\n" if $rsv;
 
-		my $payload_len = unpack 'C', substr($hdl->{rbuf}, 1, 1);
+		    my $payload_len = unpack 'C', substr($hdl->{rbuf}, 1, 1);
 
-		my $masked = $payload_len & 0b10000000;
-		die "received unmasked websocket frame from client\n" if !$masked;
+		    my $masked = $payload_len & 0b10000000;
+		    die "received unmasked websocket frame from client\n" if !$masked;
 
-		my $offset = 2;
-		$payload_len = $payload_len & 0b01111111;
-		if ($payload_len == 126) {
-		    return if $len < 4;
-		    $payload_len = unpack('n', substr($hdl->{rbuf}, $offset, 2));
-		    $offset += 2;
-		} elsif ($payload_len == 127) {
-		    return if $len < 10;
-		    $payload_len = unpack('Q>', substr($hdl->{rbuf}, $offset, 8));
-		    $offset += 8;
-		}
-
-		die "received too large websocket frame (len = $payload_len)\n"
-		    if ($payload_len > $max_payload_size) || ($payload_len < 0);
-
-		return if $len < ($offset + 4 + $payload_len);
-
-		my $data = substr($hdl->{rbuf}, 0, $len, ''); # now consume data
-
-		my @mask = (unpack('C', substr($data, $offset+0, 1)),
-			    unpack('C', substr($data, $offset+1, 1)),
-			    unpack('C', substr($data, $offset+2, 1)),
-			    unpack('C', substr($data, $offset+3, 1)));
-
-		$offset += 4;
-
-		my $payload = substr($data, $offset, $payload_len);
-
-		for (my $i = 0; $i < $payload_len; $i++) {
-		    my $d = unpack('C', substr($payload, $i, 1));
-		    my $n = $d ^ $mask[$i % 4];
-		    substr($payload, $i, 1, pack('C', $n));
-		}
-
-		$payload = decode_base64($payload) if !$binary;
-
-		if ($opcode == 1 || $opcode == 2) {
-		    $reqstate->{proxyhdl}->push_write($payload) if $reqstate->{proxyhdl};
-		} elsif ($opcode == 8) {
-		    my $statuscode = unpack ("n", $payload);
-		    print "websocket received close. status code: '$statuscode'\n" if $self->{debug};
-		    if ($reqstate->{proxyhdl}) {
-			$reqstate->{proxyhdl}->push_shutdown();
+		    my $offset = 2;
+		    $payload_len = $payload_len & 0b01111111;
+		    if ($payload_len == 126) {
+			return if $len < 4;
+			$payload_len = unpack('n', substr($hdl->{rbuf}, $offset, 2));
+			$offset += 2;
+		    } elsif ($payload_len == 127) {
+			return if $len < 10;
+			$payload_len = unpack('Q>', substr($hdl->{rbuf}, $offset, 8));
+			$offset += 8;
 		    }
-		    $hdl->push_shutdown();
-		} else {
-		    die "received unhandled websocket opcode $opcode\n";
+
+		    die "received too large websocket frame (len = $payload_len)\n"
+			if ($payload_len > $max_payload_size) || ($payload_len < 0);
+
+		    return if $len < ($offset + 4 + $payload_len);
+
+		    my $data = substr($hdl->{rbuf}, 0, $offset + 4 + $payload_len, ''); # now consume data
+
+		    my @mask = (unpack('C', substr($data, $offset+0, 1)),
+			unpack('C', substr($data, $offset+1, 1)),
+			unpack('C', substr($data, $offset+2, 1)),
+			unpack('C', substr($data, $offset+3, 1)));
+
+		    $offset += 4;
+
+		    my $payload = substr($data, $offset, $payload_len);
+
+		    for (my $i = 0; $i < $payload_len; $i++) {
+			my $d = unpack('C', substr($payload, $i, 1));
+			my $n = $d ^ $mask[$i % 4];
+			substr($payload, $i, 1, pack('C', $n));
+		    }
+
+		    $payload = decode_base64($payload) if !$binary;
+
+		    if ($opcode == 1 || $opcode == 2) {
+			$reqstate->{proxyhdl}->push_write($payload) if $reqstate->{proxyhdl};
+		    } elsif ($opcode == 8) {
+			my $statuscode = unpack ("n", $payload);
+			print "websocket received close. status code: '$statuscode'\n" if $self->{debug};
+		    if ($reqstate->{proxyhdl}) {
+				$reqstate->{proxyhdl}->push_shutdown();
+		    }
+			$hdl->push_shutdown();
+		    } else {
+			die "received unhandled websocket opcode $opcode\n";
+		    }
 		}
 	    };
 
