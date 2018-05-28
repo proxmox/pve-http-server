@@ -1,3 +1,9 @@
+libpve-http-server-perl (2.0-9) unstable; urgency=medium
+
+  * Fix #1684 WebSocket proxy behind a buffered proxy
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 28 May 2018 10:33:41 +0200
+
 libpve-http-server-perl (2.0-8) unstable; urgency=medium
 
   * auth_handler: handle exceptions correctly instead of always returning 401
