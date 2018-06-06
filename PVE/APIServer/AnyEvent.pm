@@ -345,7 +345,7 @@ sub websocket_proxy {
 	my $remhost;
 	my $remport;
 
-	my $max_payload_size = 65536;
+	my $max_payload_size = 128*1024;
 
 	my $binary;
 	if ($wsproto eq 'binary') {
@@ -375,7 +375,7 @@ sub websocket_proxy {
 	    $reqstate->{proxyhdl} = AnyEvent::Handle->new(
 		fh => $fh,
 		rbuf_max => $max_payload_size,
-		wbuf_max => $max_payload_size*10,
+		wbuf_max => $max_payload_size*5,
 		timeout => 5,
 		on_eof => sub {
 		    my ($hdl) = @_;
