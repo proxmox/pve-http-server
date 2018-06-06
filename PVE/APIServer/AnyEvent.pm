@@ -374,8 +374,8 @@ sub websocket_proxy {
 
 	    $reqstate->{proxyhdl} = AnyEvent::Handle->new(
 		fh => $fh,
-		rbuf_max => 64*1024,
-		wbuf_max => 64*10*1024,
+		rbuf_max => $max_payload_size,
+		wbuf_max => $max_payload_size*10,
 		timeout => 5,
 		on_eof => sub {
 		    my ($hdl) = @_;
@@ -398,7 +398,7 @@ sub websocket_proxy {
 		my ($hdl) = @_;
 
 		my $len = length($hdl->{rbuf});
-		my $data = substr($hdl->{rbuf}, 0, $len, '');
+		my $data = substr($hdl->{rbuf}, 0, $len > $max_payload_size ? $max_payload_size : $len, '');
 
 		my $string;
 		my $payload;
