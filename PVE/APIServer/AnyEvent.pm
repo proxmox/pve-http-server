@@ -867,7 +867,8 @@ sub handle_spice_proxy_request {
 
 		# todo: use stop_read/start_read if write buffer grows to much
 
-		my $res = "$proto 200 OK\015\012"; # hope this is the right answer?
+		# a response must be followed by an empty line
+		my $res = "$proto 200 OK\015\012\015\012";
 		$reqstate->{hdl}->push_write($res);
 
 		# log early
