@@ -1,3 +1,11 @@
+libpve-http-server-perl (2.0-10) unstable; urgency=medium
+
+  * fix #1869: send correct http response in spice proxy
+
+  * websocket: set $max_payload_size = 128*1024; (131072)
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 17 Aug 2018 08:29:53 +0200
+
 libpve-http-server-perl (2.0-9) unstable; urgency=medium
 
   * Fix #1684 WebSocket proxy behind a buffered proxy
