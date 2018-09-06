@@ -4,6 +4,7 @@ Priority: optional
 Maintainer: Proxmox Support Team <support@proxmox.com>
 Build-Depends: debhelper (>= 9),
                perl (>= 5.10.0-19),
+               unzip,
 Standards-Version: 3.9.5
 Homepage: http://www.proxmox.com
 
