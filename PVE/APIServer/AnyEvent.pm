@@ -890,7 +890,10 @@ sub handle_spice_proxy_request {
 		    my ($hdl, $line) = @_;
 
 		    if ($line =~ m!^$proto 200 OK$!) {
-			&$startproxy();
+			# read the empty line after the 200 OK
+			$reqstate->{proxyhdl}->unshift_read(line => sub{
+			    &$startproxy();
+			});
 		    } else {
 			$reqstate->{hdl}->push_write($line);
 			$self->client_do_disconnect($reqstate);
