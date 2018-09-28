@@ -1,3 +1,9 @@
+libpve-http-server-perl (2.0-11) unstable; urgency=medium
+
+  * fix #1935: spice proxy: read empty line after 200 OK
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 28 Sep 2018 10:41:22 +0200
+
 libpve-http-server-perl (2.0-10) unstable; urgency=medium
 
   * fix #1869: send correct http response in spice proxy
