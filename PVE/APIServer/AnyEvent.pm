@@ -1644,8 +1644,13 @@ sub new {
     $self->{end_cond} = AnyEvent->condvar;
 
     if ($self->{ssl}) {
+	my $tls_ctx_flags = &Net::SSLeay::OP_NO_COMPRESSION | &Net::SSLeay::OP_SINGLE_ECDH_USE | &Net::SSLeay::OP_SINGLE_DH_USE;
+	if ( delete $self->{ssl}->{honor_cipher_order} ) {
+	    $tls_ctx_flags |= &Net::SSLeay::OP_CIPHER_SERVER_PREFERENCE;
+	}
+
 	$self->{tls_ctx} = AnyEvent::TLS->new(%{$self->{ssl}});
-	Net::SSLeay::CTX_set_options($self->{tls_ctx}->{ctx}, &Net::SSLeay::OP_NO_COMPRESSION | &Net::SSLeay::OP_SINGLE_ECDH_USE | &Net::SSLeay::OP_SINGLE_DH_USE);
+	Net::SSLeay::CTX_set_options($self->{tls_ctx}->{ctx}, $tls_ctx_flags);
     }
 
     if ($self->{spiceproxy}) {
