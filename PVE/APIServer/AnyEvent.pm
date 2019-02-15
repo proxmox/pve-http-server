@@ -184,6 +184,7 @@ sub response {
     $reqstate->{hdl}->timeout_reset();
     $reqstate->{hdl}->timeout($self->{timeout});
 
+    $nocomp = !$self->{compression};
     $nocomp = 1 if !$reqstate->{accept_gzip};
 
     my $code = $resp->code;
@@ -552,7 +553,7 @@ sub proxy_request {
 
 	$headers->{'cookie'} = PVE::APIServer::Formatter::create_auth_cookie($ticket, $self->{cookie_name}) if $ticket;
 	$headers->{'CSRFPreventionToken'} = $token if $token;
-	$headers->{'Accept-Encoding'} = 'gzip' if $reqstate->{accept_gzip};
+	$headers->{'Accept-Encoding'} = 'gzip' if ($reqstate->{accept_gzip} && $self->{compression});
 
 	my $content;
 
@@ -1611,6 +1612,7 @@ sub new {
     $self->{base_uri} //= "/api2";
     $self->{dirs} //= {};
     $self->{title} //= 'API Inspector';
+    $self->{compression} //= 1;
 
     # formatter_config: we pass some configuration values to the Formatter
     $self->{formatter_config} = {};
