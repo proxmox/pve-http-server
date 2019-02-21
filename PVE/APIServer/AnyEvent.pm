@@ -184,7 +184,7 @@ sub response {
     $reqstate->{hdl}->timeout_reset();
     $reqstate->{hdl}->timeout($self->{timeout});
 
-    $nocomp = !$self->{compression};
+    $nocomp //= !$self->{compression};
     $nocomp = 1 if !$reqstate->{accept_gzip};
 
     my $code = $resp->code;
