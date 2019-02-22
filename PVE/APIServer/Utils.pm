@@ -5,6 +5,8 @@ use warnings;
 
 use Net::IP;
 
+# all settings are used for pveproxy and pmgproxy
+# the ALLOW/DENY/POLICY is also used by spiceproxy
 sub read_proxy_config {
     my ($proxy_name) = @_;
 
