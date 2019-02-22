@@ -57,6 +57,7 @@ install: ${BTDATA}
 	install -d -m 755 ${PERL5DIR}/PVE/APIServer
 	install -m 0644 PVE/APIServer/AnyEvent.pm ${PERL5DIR}/PVE/APIServer
 	install -m 0644 PVE/APIServer/Formatter.pm ${PERL5DIR}/PVE/APIServer
+	install -m 0644 PVE/APIServer/Utils.pm ${PERL5DIR}/PVE/APIServer
 	install -d -m 755 ${PERL5DIR}/PVE/APIServer/Formatter
 	install -m 0644 PVE/APIServer/Formatter/Standard.pm ${PERL5DIR}/PVE/APIServer/Formatter
 	install -m 0644 PVE/APIServer/Formatter/Bootstrap.pm ${PERL5DIR}/PVE/APIServer/Formatter
