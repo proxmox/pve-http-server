@@ -1646,6 +1646,24 @@ sub new {
     $self->{end_cond} = AnyEvent->condvar;
 
     if ($self->{ssl}) {
+	my $ssl_defaults = {
+	    # Note: older versions are considered insecure, for example
+	    # search for "Poodle"-Attack
+	    method => 'any',
+	    sslv2 => 0,
+	    sslv3 => 0,
+	    cipher_list => 'ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256',
+	    honor_cipher_order => 1,
+	};
+
+	foreach my $k (keys %$ssl_defaults) {
+	    $self->{ssl}->{$k} //= $ssl_defaults->{$k};
+	}
+
+	if (!defined($self->{ssl}->{dh_file})) {
+	    $self->{ssl}->{dh} = 'skip2048';
+	}
+
 	my $tls_ctx_flags = &Net::SSLeay::OP_NO_COMPRESSION | &Net::SSLeay::OP_SINGLE_ECDH_USE | &Net::SSLeay::OP_SINGLE_DH_USE;
 	if ( delete $self->{ssl}->{honor_cipher_order} ) {
 	    $tls_ctx_flags |= &Net::SSLeay::OP_CIPHER_SERVER_PREFERENCE;
