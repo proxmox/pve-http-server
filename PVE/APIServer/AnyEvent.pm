@@ -1194,11 +1194,15 @@ sub unshift_read_header {
 
 		my $len = $r->header('Content-Length');
 
+		my $host_header = $r->header('Host');
+		my $rpcenv = $self->{rpcenv};
+		$rpcenv->set_request_host($host_header);
+
 		# header processing complete - authenticate now
 
 		my $auth = {};
 		if ($self->{spiceproxy}) {
-		    my $connect_str = $r->header('Host');
+		    my $connect_str = $host_header;
 		    my ($vmid, $node, $port) = $self->verify_spice_connect_url($connect_str);
 		    if (!(defined($vmid) && $node && $port)) {
 			$self->error($reqstate, HTTP_UNAUTHORIZED, "invalid ticket");
