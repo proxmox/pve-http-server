@@ -555,6 +555,10 @@ sub proxy_request {
 	$headers->{'CSRFPreventionToken'} = $token if $token;
 	$headers->{'Accept-Encoding'} = 'gzip' if ($reqstate->{accept_gzip} && $self->{compression});
 
+	if (defined(my $host = $reqstate->{request}->header('Host'))) {
+	    $headers->{Host} = $host;
+	}
+
 	my $content;
 
 	if  ($method eq 'POST' || $method eq 'PUT') {
