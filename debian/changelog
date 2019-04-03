@@ -1,3 +1,13 @@
+libpve-http-server-perl (2.0-13) unstable; urgency=medium
+
+  * tls: make dh to openssl 1.1 compatible
+
+  * store Host header in rpc environment
+
+  * forward Host header in proxy_request
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 03 Apr 2019 13:55:44 +0200
+
 libpve-http-server-perl (2.0-12) unstable; urgency=medium
 
   * Allow one to specify 'honor_cipher_order' and 'compression' parameters
