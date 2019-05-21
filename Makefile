@@ -53,10 +53,10 @@ download_jquery:
 	wget https://code.jquery.com/jquery-${JQVER}.min.js -O ${JQSRC}.tmp
 	mv ${JQSRC}.tmp ${JQSRC}
 
-${BTDATA}: ${BTSRC}
+${BTDATA}: ${BTDIR}
+${BTDIR}: ${BTSRC}
 	rm -rf ${BTDIR}
 	unzip -x ${BTSRC}
-	touch $@
 
 install: ${BTDATA}
 	install -d -m 755 ${PERL5DIR}/PVE/APIServer
