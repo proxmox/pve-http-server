@@ -19,7 +19,7 @@ WWWFONTSDIR=${WWWBASEDIR}/fonts
 WWWJSDIR=${WWWBASEDIR}/js
 
 # bootstrap library
-BTVER=3.3.7
+BTVER=3.4.1
 BTDIR=bootstrap-${BTVER}-dist
 BTSRC=${BTDIR}.zip
 
