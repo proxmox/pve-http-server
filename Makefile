@@ -83,6 +83,7 @@ install: ${BTDATA}
 upload: ${DEB}
 	tar cf - ${DEB} | ssh -X repoman@repo.proxmox.com -- upload --product pve,pmg --dist stretch
 
+.PHONY: clean distclean
 distclean: clean
 	rm -f examples/simple-demo.pem
 
