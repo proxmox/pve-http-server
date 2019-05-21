@@ -1,8 +1,12 @@
-PACKAGE=libpve-http-server-perl
-PKGVER=2.0
-PKGREL=13
+include /usr/share/dpkg/pkg-info.mk
+include /usr/share/dpkg/architecture.mk
 
-DEB=${PACKAGE}_${PKGVER}-${PKGREL}_all.deb
+PACKAGE=libpve-http-server-perl
+
+GITVERSION:=$(shell git rev-parse HEAD)
+BUILDDIR ?= ${PACKAGE}-${DEB_VERSION_UPSTREAM}
+
+DEB=${PACKAGE}_${DEB_VERSION_UPSTREAM_REVISION}_all.deb
 
 DESTDIR=
 
@@ -33,9 +37,10 @@ all:
 .PHONY: deb
 deb: ${DEB}
 ${DEB}:
-	rm -rf build
-	rsync -a * build
-	cd build; dpkg-buildpackage -b -us -uc
+	rm -rf ${BUILDDIR}
+	rsync -a * ${BUILDDIR}
+	echo "git clone git://git.proxmox.com/git/pve-http-server\\ngit checkout $(GITVERSION)" > $(BUILDDIR)/debian/SOURCE
+	cd ${BUILDDIR}; dpkg-buildpackage -b -us -uc
 	lintian ${DEB}
 
 download_bootstrap:
