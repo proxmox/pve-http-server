@@ -29,7 +29,7 @@ BTDATA = 							\
 	${BTDIR}/js/bootstrap.min.js				\
 	${BTDIR}/fonts/glyphicons-halflings-regular.ttf
 
-JQVER=3.3.1
+JQVER=3.4.1
 JQSRC=jquery-${JQVER}.min.js
 
 all:
@@ -50,7 +50,7 @@ download_bootstrap:
 
 download_jquery:
 	rm -f ${JQSRC} ${JQSRC}.tmp
-	wget https://code.jquery.com/jquery-3.1.1.min.js -O ${JQSRC}.tmp
+	wget https://code.jquery.com/jquery-${JQVER}.min.js -O ${JQSRC}.tmp
 	mv ${JQSRC}.tmp ${JQSRC}
 
 ${BTDATA}: ${BTSRC}
