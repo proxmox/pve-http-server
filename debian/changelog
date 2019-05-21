@@ -1,3 +1,13 @@
+libpve-http-server-perl (3.0-1) pve pmg; urgency=medium
+
+  * rebuild for Debian Buster / PVE 6.0
+
+  * update jQuery to 3.4.1
+
+  * update Bootstrap to 3.4.1
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 21 May 2019 21:35:00 +0200
+
 libpve-http-server-perl (2.0-13) unstable; urgency=medium
 
   * tls: make dh to openssl 1.1 compatible
