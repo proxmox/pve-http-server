@@ -1199,8 +1199,9 @@ sub unshift_read_header {
 		my $len = $r->header('Content-Length');
 
 		my $host_header = $r->header('Host');
-		my $rpcenv = $self->{rpcenv};
-		$rpcenv->set_request_host($host_header);
+		if (my $rpcenv = $self->{rpcenv}) {
+		    $rpcenv->set_request_host($host_header);
+		}
 
 		# header processing complete - authenticate now
 
