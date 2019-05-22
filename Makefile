@@ -87,7 +87,7 @@ distclean: clean
 	rm -f examples/simple-demo.pem
 
 clean:
-	rm -rf ./build *.deb *.changes *.buildinfo ${BTDIR} examples/simple-demo.lck
+	rm -rf ${PACKAGE}-*/ *.deb *.changes *.buildinfo ${BTDIR} examples/simple-demo.lck
 	find . -name '*~' -exec rm {} ';'
 
 .PHONY: dinstall
