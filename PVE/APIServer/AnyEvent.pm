@@ -1199,8 +1199,9 @@ sub unshift_read_header {
 		my $len = $r->header('Content-Length');
 
 		my $host_header = $r->header('Host');
-		my $rpcenv = $self->{rpcenv};
-		$rpcenv->set_request_host($host_header);
+		if (my $rpcenv = $self->{rpcenv}) {
+		    $rpcenv->set_request_host($host_header);
+		}
 
 		# header processing complete - authenticate now
 
@@ -1634,10 +1635,11 @@ sub new {
 	$self->can('generate_csrf_prevention_token');
 
     # add default dirs which includes jquery and bootstrap
-    my $base = '/usr/share/libpve-http-server-perl';
-    add_dirs($self->{dirs}, '/css/' => "$base/css/");
-    add_dirs($self->{dirs}, '/js/' => "$base/js/");
-    add_dirs($self->{dirs}, '/fonts/' => "$base/fonts/");
+    my $jsbase = '/usr/share/javascript';
+    add_dirs($self->{dirs}, '/js/' => "$jsbase/");
+    # libjs-bootstrap uses symlinks for this, which we do not want to allow..
+    my $glyphicons = '/usr/share/fonts/truetype/glyphicons/';
+    add_dirs($self->{dirs}, '/js/bootstrap/fonts/' => "$glyphicons");
 
     # init inotify
     PVE::INotify::inotify_init();
