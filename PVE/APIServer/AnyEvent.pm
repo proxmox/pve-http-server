@@ -645,16 +645,19 @@ sub decode_urlencoded {
 	my ($k, $v) = split(/=/, $kv);
 	$k =~s/\+/ /g;
 	$k =~ s/%([0-9a-fA-F][0-9a-fA-F])/chr(hex($1))/eg;
-	$v =~s/\+/ /g;
-	$v =~ s/%([0-9a-fA-F][0-9a-fA-F])/chr(hex($1))/eg;
 
-	$v = Encode::decode('utf8', $v);
+	if (defined($v)) {
+	    $v =~s/\+/ /g;
+	    $v =~ s/%([0-9a-fA-F][0-9a-fA-F])/chr(hex($1))/eg;
 
-	if (defined(my $old = $res->{$k})) {
-	    $res->{$k} = "$old\0$v";
-	} else {
-	    $res->{$k} = $v;
+	    $v = Encode::decode('utf8', $v);
+
+	    if (defined(my $old = $res->{$k})) {
+		$v = "$old\0$v";
+	    }
 	}
+
+	$res->{$k} = $v;
     }
     return $res;
 }
