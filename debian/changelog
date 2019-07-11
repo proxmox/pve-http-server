@@ -1,3 +1,11 @@
+libpve-http-server-perl (3.0-2) pve pmg; urgency=medium
+
+  * decode_urlencoded: cope with undefined values
+
+  * anyevent: rpcenv is optional and from our child instance
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 11 Jul 2019 19:30:23 +0200
+
 libpve-http-server-perl (3.0-1) pve pmg; urgency=medium
 
   * rebuild for Debian Buster / PVE 6.0
