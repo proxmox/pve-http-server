@@ -293,7 +293,7 @@ my $file_extension_info = {
 };
 
 sub send_file_start {
-    my ($self, $reqstate, $filename) = @_;
+    my ($self, $reqstate, $download) = @_;
 
     eval {
 	# print "SEND FILE $filename\n";
@@ -302,8 +302,26 @@ sub send_file_start {
 
 	    my $r = $reqstate->{request};
 
-	    my $fh = IO::File->new($filename, '<') ||
-		die "$!\n";
+	    my $fh;
+	    my $nocomp;
+	    my $mime;
+
+	    if (ref($download) eq 'HASH') {
+		$fh = $download->{fh};
+		$mime = $download->{'content-type'};
+	    } else {
+		my $filename = $download;
+		$fh = IO::File->new($filename, '<') ||
+		    die "unable to open file '$filename' - $!\n";
+
+		my ($ext) = $filename =~ m/\.([^.]*)$/;
+		my $ext_info = $file_extension_info->{$ext};
+
+		die "unable to detect content type" if !$ext_info;
+		$mime = $ext_info->{ct};
+		$nocomp = $ext_info->{nocomp};
+	    }
+
 	    my $stat = File::stat::stat($fh) ||
 		die "$!\n";
 
@@ -322,14 +340,9 @@ sub send_file_start {
 	    my $len = sysread($fh, $data,  $stat->size);
 	    die "got short file\n" if !defined($len) || $len != $stat->size;
 
-	    my ($ext) = $filename =~ m/\.([^.]*)$/;
-	    my $ext_info = $file_extension_info->{$ext};
-
-	    die "unable to detect content type" if !$ext_info;
-
-	    my $header = HTTP::Headers->new(Content_Type => $ext_info->{ct});
+	    my $header = HTTP::Headers->new(Content_Type => $mime);
 	    my $resp = HTTP::Response->new(200, "OK", $header, $data);
-	    $self->response($reqstate, $resp, $mtime, $ext_info->{nocomp});
+	    $self->response($reqstate, $resp, $mtime, $nocomp);
 	};
 	if (my $err = $@) {
 	    $self->error($reqstate, 501, $err);
@@ -766,10 +779,8 @@ sub handle_api2_request {
 	    $delay = 0 if $delay < 0;
 	}
 
-	if (defined(my $filename = $res->{download})) {
-	    my $fh = IO::File->new($filename) ||
-		die "unable to open file '$filename' - $!\n";
-	    send_file_start($self, $reqstate, $filename);
+	if (defined(my $download = $res->{download})) {
+	    send_file_start($self, $reqstate, $download);
 	    return;
 	}
 
