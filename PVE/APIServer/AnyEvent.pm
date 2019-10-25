@@ -591,9 +591,6 @@ sub proxy_request {
 	    sslv2 => 0,
 	    sslv3 => 0,
 	    verify => 1,
-	    # be compatible with openssl 1.1, fix for debian bug #923615
-	    # remove once libanyeven-perl with this fix transitions to buster
-	    dh => 'schmorp2048',
 	    verify_cb => sub {
 		my (undef, undef, undef, $depth, undef, undef, $cert) = @_;
 		# we don't care about intermediate or root certificates
