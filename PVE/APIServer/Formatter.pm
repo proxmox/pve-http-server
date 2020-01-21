@@ -75,16 +75,16 @@ sub get_login_formatter {
 
 # some helper functions
 
-sub extract_auth_cookie {
-    my ($cookie, $cookie_name) = @_;
+sub extract_auth_value {
+    my ($header, $key) = @_;
 
-    return undef if !$cookie;
+    return undef if !$header;
 
-    my $ticket = ($cookie =~ /(?:^|\s)\Q$cookie_name\E=([^;]*)/)[0];
+    my $value = ($header =~ /(?:^|\s)\Q$key\E(?:=| )([^;]*)/)[0];
 
-    $ticket = uri_unescape($ticket) if $ticket;
+    $value = uri_unescape($value) if $value;
 
-    return $ticket;
+    return $value;
 }
 
 sub create_auth_cookie {

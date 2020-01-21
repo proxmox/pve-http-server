@@ -1229,7 +1229,14 @@ sub unshift_read_header {
 		} elsif ($path =~ m/^\Q$base_uri\E/) {
 		    my $token = $r->header('CSRFPreventionToken');
 		    my $cookie = $r->header('Cookie');
-		    my $ticket = PVE::APIServer::Formatter::extract_auth_cookie($cookie, $self->{cookie_name});
+		    my $auth_header = $r->header('Authorization');
+
+		    # prefer actual cookie
+		    my $ticket = PVE::APIServer::Formatter::extract_auth_value($cookie, $self->{cookie_name});
+
+		    # fallback to cookie in 'Authorization' header
+		    $ticket = PVE::APIServer::Formatter::extract_auth_value($auth_header, $self->{cookie_name})
+			if !$ticket;
 
 		    my ($rel_uri, $format) = &$split_abs_uri($path, $self->{base_uri});
 		    if (!$format) {
