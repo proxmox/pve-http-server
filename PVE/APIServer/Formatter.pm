@@ -95,4 +95,13 @@ sub create_auth_cookie {
     return "${cookie_name}=$encticket; path=/; secure;";
 }
 
+sub create_auth_header {
+    my ($value, $key) = @_;
+
+    return undef if !$key;
+
+    my $encoded = uri_escape($value);
+    return "${key} ${encoded}";
+}
+
 1;

@@ -544,7 +544,7 @@ sub websocket_proxy {
 }
 
 sub proxy_request {
-    my ($self, $reqstate, $clientip, $host, $node, $method, $uri, $ticket, $token, $params) = @_;
+    my ($self, $reqstate, $clientip, $host, $node, $method, $uri, $auth, $params) = @_;
 
     eval {
 	my $target;
@@ -564,8 +564,12 @@ sub proxy_request {
 	    PVEClientIP => $clientip,
 	};
 
-	$headers->{'cookie'} = PVE::APIServer::Formatter::create_auth_cookie($ticket, $self->{cookie_name}) if $ticket;
-	$headers->{'CSRFPreventionToken'} = $token if $token;
+	$headers->{'cookie'} = PVE::APIServer::Formatter::create_auth_cookie($auth->{ticket}, $self->{cookie_name})
+	    if $auth->{ticket};
+	$headers->{'Authorization'} = PVE::APIServer::Formatter::create_auth_header($auth->{api_token}, $self->{apitoken_name})
+	    if $auth->{api_token};
+	$headers->{'CSRFPreventionToken'} = $auth->{token}
+	    if $auth->{token};
 	$headers->{'Accept-Encoding'} = 'gzip' if ($reqstate->{accept_gzip} && $self->{compression});
 
 	if (defined(my $host = $reqstate->{request}->header('Host'))) {
@@ -744,7 +748,7 @@ sub handle_api2_request {
 	    $res->{proxy_params}->{tmpfilename} = $reqstate->{tmpfilename} if $upload_state;
 
 	    $self->proxy_request($reqstate, $clientip, $host, $res->{proxynode}, $method,
-				 $r->uri, $auth->{ticket}, $auth->{token}, $res->{proxy_params});
+				 $r->uri, $auth, $res->{proxy_params});
 	    return;
 
 	} elsif ($upgrade && ($method eq 'GET') && ($path =~ m|websocket$|)) {
@@ -1238,6 +1242,11 @@ sub unshift_read_header {
 		    $ticket = PVE::APIServer::Formatter::extract_auth_value($auth_header, $self->{cookie_name})
 			if !$ticket;
 
+		    # finally, fallback to API token if no ticket has been provided so far
+		    my $api_token;
+		    $api_token = PVE::APIServer::Formatter::extract_auth_value($auth_header, $self->{apitoken_name})
+			if !$ticket;
+
 		    my ($rel_uri, $format) = &$split_abs_uri($path, $self->{base_uri});
 		    if (!$format) {
 			$self->error($reqstate, HTTP_NOT_IMPLEMENTED, "no such uri");
@@ -1245,7 +1254,7 @@ sub unshift_read_header {
 		    }
 
 		    eval {
-			$auth = $self->auth_handler($method, $rel_uri, $ticket, $token,
+			$auth = $self->auth_handler($method, $rel_uri, $ticket, $token, $api_token,
 						    $reqstate->{peer_host});
 		    };
 		    if (my $err = $@) {
@@ -1639,6 +1648,7 @@ sub new {
     my $self = bless { %args }, $class;
 
     $self->{cookie_name} //= 'PVEAuthCookie';
+    $self->{apitoken_name} //= 'PVEAPIToken';
     $self->{base_uri} //= "/api2";
     $self->{dirs} //= {};
     $self->{title} //= 'API Inspector';
@@ -1646,7 +1656,7 @@ sub new {
 
     # formatter_config: we pass some configuration values to the Formatter
     $self->{formatter_config} = {};
-    foreach my $p (qw(cookie_name base_uri title)) {
+    foreach my $p (qw(apitoken_name cookie_name base_uri title)) {
 	$self->{formatter_config}->{$p} = $self->{$p};
     }
     $self->{formatter_config}->{csrfgen_func} =
@@ -1781,7 +1791,7 @@ sub generate_csrf_prevention_token {
 }
 
 sub auth_handler {
-    my ($self, $method, $rel_uri, $ticket, $token, $peer_host) = @_;
+    my ($self, $method, $rel_uri, $ticket, $token, $api_token, $peer_host) = @_;
 
     die "implement me";
 
@@ -1791,6 +1801,7 @@ sub auth_handler {
     #    userid => $username,
     #    age => $age,
     #    isUpload => $isUpload,
+    #    api_token => $api_token,
     #};
 }
 

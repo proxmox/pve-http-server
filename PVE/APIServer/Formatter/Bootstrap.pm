@@ -65,6 +65,7 @@ sub new {
 	url => $url,
 	title => $config->{title},
 	cookie_name => $config->{cookie_name},
+	apitoken_name => $config->{apitoken_name},
 	js => '',
     };
 
