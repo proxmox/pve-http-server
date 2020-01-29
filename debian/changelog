@@ -1,3 +1,11 @@
+libpve-http-server-perl (3.0-4) pve pmg; urgency=medium
+
+  * allow ticket in 'Authorization' header as fallback
+
+  * api-server: extract, set and handle API token header
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 29 Jan 2020 09:32:04 +0100
+
 libpve-http-server-perl (3.0-3) pve pmg; urgency=medium
 
   * send_file_start: allow to pass a open fh and content-type
