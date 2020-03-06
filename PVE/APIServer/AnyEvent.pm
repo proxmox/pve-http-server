@@ -380,6 +380,33 @@ sub websocket_proxy {
 	    die "websocket_proxy: missing port or socket\n";
 	}
 
+	my $encode = sub {
+	    my ($data, $opcode) = @_;
+
+	    my $string;
+	    my $payload;
+	    if ($binary) {
+		$string = $opcode ? $opcode : "\x82"; # binary frame
+		$payload = $$data;
+	    } else {
+		$string = $opcode ? $opcode : "\x81"; # text frame
+		$payload = encode_base64($$data, '');
+	    }
+
+	    my $payload_len = length($payload);
+	    if ($payload_len <= 125) {
+		$string .= pack 'C', $payload_len;
+	    } elsif ($payload_len <= 0xffff) {
+		$string .= pack 'C', 126;
+		$string .= pack 'n', $payload_len;
+	    } else {
+		$string .= pack 'C', 127;
+		$string .= pack 'Q>', $payload_len;
+	    }
+	    $string .= $payload;
+	    return $string;
+	};
+
 	tcp_connect $remhost, $remport, sub {
 	    my ($fh) = @_
 		or die "connect to '$remhost:$remport' failed: $!";
@@ -414,28 +441,7 @@ sub websocket_proxy {
 		my $len = length($hdl->{rbuf});
 		my $data = substr($hdl->{rbuf}, 0, $len > $max_payload_size ? $max_payload_size : $len, '');
 
-		my $string;
-		my $payload;
-
-		if ($binary) {
-		    $string = "\x82"; # binary frame
-		    $payload = $data;
-		} else {
-		    $string = "\x81"; # text frame
-		    $payload = encode_base64($data, '');
-		}
-
-		my $payload_len = length($payload);
-		if ($payload_len <= 125) {
-		    $string .= pack 'C', $payload_len;
-		} elsif ($payload_len <= 0xffff) {
-		    $string .= pack 'C', 126;
-		    $string .= pack 'n', $payload_len;
-		} else {
-		    $string .= pack 'C', 127;
-		    $string .= pack 'Q>', $payload_len;
-		}
-		$string .= $payload;
+		my $string = $encode->(\$data);
 
 		$reqstate->{hdl}->push_write($string) if $reqstate->{hdl};
 	    };
