@@ -809,7 +809,9 @@ sub handle_spice_proxy_request {
     eval {
 
 	my ($minport, $maxport) = PVE::Tools::spice_port_range();
-        die "Port $spiceport is not allowed" if ($spiceport < $minport || $spiceport > $maxport);
+	if ($spiceport < $minport || $spiceport > $maxport) {
+	    die "SPICE Port $spiceport is not in allowed range ($minport, $maxport)\n";
+	}
 
 	my $clientip = $reqstate->{peer_host};
 	my $r = $reqstate->{request};
