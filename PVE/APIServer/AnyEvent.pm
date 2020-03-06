@@ -511,6 +511,11 @@ sub websocket_proxy {
 				$reqstate->{proxyhdl}->push_shutdown();
 		    }
 			$hdl->push_shutdown();
+		    } elsif ($opcode == 9) {
+			# ping received, schedule pong
+			$reqstate->{hdl}->push_write($encode->(\$payload, "\x8A")) if $reqstate->{hdl};
+		    } elsif ($opcode == 0xA) {
+			# pong received, continue
 		    } else {
 			die "received unhandled websocket opcode $opcode\n";
 		    }
