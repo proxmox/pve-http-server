@@ -21,7 +21,7 @@ Depends: libanyevent-http-perl,
          libjs-bootstrap,
          libjson-perl,
          libnet-ip-perl,
-         libpve-common-perl,
+         libpve-common-perl (>= 6.0-13),
          liburi-perl,
          ${perl:Depends},
 Breaks: pmg-api (<< 6.1-5), pve-manager (<< 6.1-6)
