@@ -479,19 +479,19 @@ sub websocket_proxy {
 
 		    my $data = substr($hdl->{rbuf}, 0, $offset + 4 + $payload_len, ''); # now consume data
 
-		    my @mask = (unpack('C', substr($data, $offset+0, 1)),
-			unpack('C', substr($data, $offset+1, 1)),
-			unpack('C', substr($data, $offset+2, 1)),
-			unpack('C', substr($data, $offset+3, 1)));
-
+		    my $mask = substr($data, $offset, 4);
 		    $offset += 4;
 
 		    my $payload = substr($data, $offset, $payload_len);
 
-		    for (my $i = 0; $i < $payload_len; $i++) {
-			my $d = unpack('C', substr($payload, $i, 1));
-			my $n = $d ^ $mask[$i % 4];
-			substr($payload, $i, 1, pack('C', $n));
+		    # NULL-mask might be used over TLS, skip to increase performance
+		    if ($mask ne pack('N', 0)) {
+			# repeat 4 byte mask to payload length + up to 4 byte
+			$mask = $mask x (int($payload_len / 4) + 1);
+			# truncate mask to payload length
+			substr($mask, $payload_len) = "";
+			# (un-)apply mask
+			$payload ^= $mask;
 		    }
 
 		    $payload = decode_base64($payload) if !$binary;
