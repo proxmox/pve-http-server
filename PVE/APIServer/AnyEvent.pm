@@ -507,9 +507,9 @@ sub websocket_proxy {
 		    } elsif ($opcode == 8) {
 			my $statuscode = unpack ("n", $payload);
 			print "websocket received close. status code: '$statuscode'\n" if $self->{debug};
-		    if ($reqstate->{proxyhdl}) {
-				$reqstate->{proxyhdl}->push_shutdown();
-		    }
+			if ($reqstate->{proxyhdl}) {
+			    $reqstate->{proxyhdl}->push_shutdown();
+			}
 			$hdl->push_shutdown();
 		    } elsif ($opcode == 9) {
 			# ping received, schedule pong
