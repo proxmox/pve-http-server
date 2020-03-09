@@ -1,3 +1,14 @@
+libpve-http-server-perl (3.0-5) pve pmg; urgency=medium
+
+  * partially fix #2618: use new unified spice port range helper from
+    pve-common, increases maximum proxy port for spice to 61999
+
+  * Websocket: implement ping/pong from RFC
+
+  * Websocket: performance improvements
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 09 Mar 2020 16:12:45 +0100
+
 libpve-http-server-perl (3.0-4) pve pmg; urgency=medium
 
   * allow ticket in 'Authorization' header as fallback
