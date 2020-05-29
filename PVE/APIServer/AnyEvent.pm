@@ -44,6 +44,7 @@ use HTTP::Headers;
 use HTTP::Request;
 use HTTP::Response;
 use Data::Dumper;
+use JSON;
 
 my $limit_max_headers = 30;
 my $limit_max_header_size = 8*1024;
@@ -693,7 +694,15 @@ sub extract_params {
     my $params = {};
 
     if ($method eq 'PUT' || $method eq 'POST') {
-	$params = decode_urlencoded($r->content);
+	my $ct;
+	if (my $ctype = $r->header('Content-Type')) {
+	    $ct = parse_content_type($ctype);
+	}
+	if (defined($ct) && $ct eq 'application/json')  {
+	    $params = decode_json($r->content);
+	} else {
+	    $params = decode_urlencoded($r->content);
+	}
     }
 
     my $query_params = decode_urlencoded($r->url->query());
@@ -1356,7 +1365,7 @@ sub unshift_read_header {
 			return;
 		    }
 
-		    if (!$ct || $ct eq 'application/x-www-form-urlencoded') {
+		    if (!$ct || $ct eq 'application/x-www-form-urlencoded' || $ct eq 'application/json') {
 			$reqstate->{hdl}->unshift_read(chunk => $len, sub {
 			    my ($hdl, $data) = @_;
 			    $r->content($data);
