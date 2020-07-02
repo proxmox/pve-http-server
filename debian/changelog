@@ -1,3 +1,13 @@
+libpve-http-server-perl (3.0-6) pve pmg; urgency=medium
+
+  * fix #2766: allow application/json as content-type for post/put requests
+
+  * increase maximal accepted header count to 64. Modern browsers and proxy
+    combinations can exceed the old limit of 30. The maximal accumulated total
+    header size of 8 KiB stays untouched.
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 02 Jul 2020 09:42:39 +0200
+
 libpve-http-server-perl (3.0-5) pve pmg; urgency=medium
 
   * partially fix #2618: use new unified spice port range helper from
