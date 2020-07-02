@@ -46,7 +46,7 @@ use HTTP::Response;
 use Data::Dumper;
 use JSON;
 
-my $limit_max_headers = 30;
+my $limit_max_headers = 64;
 my $limit_max_header_size = 8*1024;
 my $limit_max_post = 64*1024;
 
@@ -1184,7 +1184,7 @@ sub unshift_read_header {
 	eval {
 	    # print "$$: got header: $line\n" if $self->{debug};
 
-	    die "to many http header lines\n" if ++$state->{count} >= $limit_max_headers;
+	    die "too many http header lines (> $limit_max_headers)\n" if ++$state->{count} >= $limit_max_headers;
 	    die "http header too large\n" if ($state->{size} += length($line)) >= $limit_max_header_size;
 
 	    my $r = $reqstate->{request};
