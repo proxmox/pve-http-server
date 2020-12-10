@@ -1532,6 +1532,11 @@ sub check_host_access {
 
     my $cip = Net::IP->new($clientip);
 
+    if (!$cip) {
+	$self->dprint("client IP not parsable: $@");
+	return 0;
+    }
+
     my $match_allow = 0;
     my $match_deny = 0;
 
@@ -1564,10 +1569,10 @@ sub check_host_access {
 sub accept_connections {
     my ($self) = @_;
 
-    my $handle_creation;
+    my ($clientfh, $handle_creation);
     eval {
 
-	while (my $clientfh = $self->accept()) {
+	while ($clientfh = $self->accept()) {
 
 	    my $reqstate = { keep_alive => $self->{keep_alive} };
 
@@ -1579,12 +1584,16 @@ sub accept_connections {
 	    if (my $sin = getpeername($clientfh)) {
 		my ($pfamily, $pport, $phost) = PVE::Tools::unpack_sockaddr_in46($sin);
 		($reqstate->{peer_port}, $reqstate->{peer_host}) = ($pport,  Socket::inet_ntop($pfamily, $phost));
+	    } else {
+		close($clientfh);
+		next;
 	    }
 
 	    if (!$self->{trusted_env} && !$self->check_host_access($reqstate->{peer_host})) {
 		$self->dprint("ABORT request from $reqstate->{peer_host} - access denied");
 		$reqstate->{log}->{code} = 403;
 		$self->log_request($reqstate);
+		close($clientfh);
 		next;
 	    }
 
@@ -1625,6 +1634,7 @@ sub accept_connections {
 
     if (my $err = $@) {
 	syslog('err', $err);
+	close($clientfh);
 	if ($handle_creation) {
 	    if ($self->{conn_count} <= 0) {
 		warn "connection count <= 0 not decrementing!\n";
