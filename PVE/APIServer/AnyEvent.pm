@@ -157,6 +157,8 @@ sub client_do_disconnect {
 
     &$shutdown_hdl($hdl);
 
+    warn "connection count <= 0!\n" if $self->{conn_count} <= 0;
+
     $self->{conn_count}--;
 
     $self->dprint("CLOSE FH" .  $hdl->{fh}->fileno() . " CONN$self->{conn_count}");
@@ -1489,8 +1491,6 @@ sub accept {
 
     fh_nonblocking $clientfh, 1;
 
-    $self->{conn_count}++;
-
     return $clientfh;
 }
 
@@ -1564,6 +1564,7 @@ sub check_host_access {
 sub accept_connections {
     my ($self) = @_;
 
+    my $handle_creation;
     eval {
 
 	while (my $clientfh = $self->accept()) {
@@ -1571,7 +1572,7 @@ sub accept_connections {
 	    my $reqstate = { keep_alive => $self->{keep_alive} };
 
 	    # stop keep-alive when there are many open connections
-	    if ($self->{conn_count} >= $self->{max_conn_soft_limit}) {
+	    if ($self->{conn_count} + 1 >= $self->{max_conn_soft_limit}) {
 		$reqstate->{keep_alive} = 0;
 	    }
 
@@ -1587,6 +1588,11 @@ sub accept_connections {
 		next;
 	    }
 
+	    # Increment conn_count before creating new handle, since creation
+	    # triggers callbacks, which can potentialy decrement (e.g.
+	    # on_error) conn_count before AnyEvent::Handle->new() returns.
+	    $handle_creation = 1;
+	    $self->{conn_count}++;
 	    $reqstate->{hdl} = AnyEvent::Handle->new(
 		fh => $clientfh,
 		rbuf_max => 64*1024,
@@ -1609,6 +1615,7 @@ sub accept_connections {
 		    if (my $err = $@) { syslog('err', "$err"); }
 		},
 		($self->{tls_ctx} ? (tls => "accept", tls_ctx => $self->{tls_ctx}) : ()));
+	    $handle_creation = 0;
 
 	    $self->dprint("ACCEPT FH" .  $clientfh->fileno() . " CONN$self->{conn_count}");
 
@@ -1618,6 +1625,13 @@ sub accept_connections {
 
     if (my $err = $@) {
 	syslog('err', $err);
+	if ($handle_creation) {
+	    if ($self->{conn_count} <= 0) {
+		warn "connection count <= 0 not decrementing!\n";
+	    } else {
+		$self->{conn_count}--;
+	    }
+	}
 	$self->{end_loop} = 1;
     }
 
