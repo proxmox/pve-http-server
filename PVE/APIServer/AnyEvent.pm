@@ -1544,6 +1544,7 @@ sub check_host_access {
 	foreach my $t (@{$self->{allow_from}}) {
 	    if ($t->overlaps($cip)) {
 		$match_allow = 1;
+		$self->dprint("client IP allowed: ". $t->prefix());
 		last;
 	    }
 	}
@@ -1552,6 +1553,7 @@ sub check_host_access {
     if ($self->{deny_from}) {
 	foreach my $t (@{$self->{deny_from}}) {
 	    if ($t->overlaps($cip)) {
+		$self->dprint("client IP denied: ". $t->prefix());
 		$match_deny = 1;
 		last;
 	    }
@@ -1585,6 +1587,7 @@ sub accept_connections {
 		my ($pfamily, $pport, $phost) = PVE::Tools::unpack_sockaddr_in46($sin);
 		($reqstate->{peer_port}, $reqstate->{peer_host}) = ($pport,  Socket::inet_ntop($pfamily, $phost));
 	    } else {
+		$self->dprint("getpeername failed: $!");
 		close($clientfh);
 		next;
 	    }
@@ -1634,6 +1637,7 @@ sub accept_connections {
 
     if (my $err = $@) {
 	syslog('err', $err);
+	$self->dprint("connection accept error: $err");
 	close($clientfh);
 	if ($handle_creation) {
 	    if ($self->{conn_count} <= 0) {
