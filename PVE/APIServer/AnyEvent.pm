@@ -66,6 +66,16 @@ my $split_abs_uri = sub {
     return wantarray ? ($rel_uri, $format) : $rel_uri;
 };
 
+sub dprint {
+    my ($self, $message) = @_;
+
+    return if !$self->{debug};
+
+    my ($pkg, $pkgfile, $line, $sub) = caller(1);
+    $sub =~ s/^(?:.+::)+//;
+    print "worker[$$]: $pkg +$line: $sub: $message\n";
+}
+
 sub log_request {
     my ($self, $reqstate) = @_;
 
@@ -143,13 +153,13 @@ sub client_do_disconnect {
 	return;
     }
 
-    print "close connection $hdl\n" if $self->{debug};
+    $self->dprint("close connection $hdl");
 
     &$shutdown_hdl($hdl);
 
     $self->{conn_count}--;
 
-    print "$$: CLOSE FH" .  $hdl->{fh}->fileno() . " CONN$self->{conn_count}\n" if $self->{debug};
+    $self->dprint("CLOSE FH" .  $hdl->{fh}->fileno() . " CONN$self->{conn_count}");
 }
 
 sub finish_response {
@@ -412,7 +422,7 @@ sub websocket_proxy {
 	    my ($fh) = @_
 		or die "connect to '$remhost:$remport' failed: $!";
 
-	    print "$$: CONNECTed to '$remhost:$remport'\n" if $self->{debug};
+	    $self->dprint("CONNECTed to '$remhost:$remport'");
 
 	    $reqstate->{proxyhdl} = AnyEvent::Handle->new(
 		fh => $fh,
@@ -507,7 +517,7 @@ sub websocket_proxy {
 			$reqstate->{proxyhdl}->push_write($payload) if $reqstate->{proxyhdl};
 		    } elsif ($opcode == 8) {
 			my $statuscode = unpack ("n", $payload);
-			print "websocket received close. status code: '$statuscode'\n" if $self->{debug};
+			$self->dprint("websocket received close. status code: '$statuscode'");
 			if ($reqstate->{proxyhdl}) {
 			    $reqstate->{proxyhdl}->push_shutdown();
 			}
@@ -538,7 +548,7 @@ sub websocket_proxy {
 		"Sec-WebSocket-Protocol: $wsproto\015\012" .
 		"\015\012";
 
-	    print $res if $self->{debug};
+	    $self->dprint($res);
 
 	    $reqstate->{hdl}->push_write($res);
 
@@ -840,9 +850,9 @@ sub handle_spice_proxy_request {
 
         if ($node ne 'localhost' && PVE::INotify::nodename() !~ m/^$node$/i) {
             $remip = $self->remote_node_ip($node);
-	    print "REMOTE CONNECT $vmid, $remip, $connect_str\n" if $self->{debug};
+	    $self->dprint("REMOTE CONNECT $vmid, $remip, $connect_str");
         } else {
-	    print "$$: CONNECT $vmid, $node, $spiceport\n" if $self->{debug};
+	    $self->dprint("CONNECT $vmid, $node, $spiceport");
 	}
 
 	if ($remip && $r->header('PVEDisableProxy')) {
@@ -860,7 +870,7 @@ sub handle_spice_proxy_request {
 	    my ($fh) = @_
 		or die "connect to '$remhost:$remport' failed: $!";
 
-	    print "$$: CONNECTed to '$remhost:$remport'\n" if $self->{debug};
+	    $self->dprint("CONNECTed to '$remhost:$remport'");
 	    $reqstate->{proxyhdl} = AnyEvent::Handle->new(
 		fh => $fh,
 		rbuf_max => 64*1024,
@@ -1333,7 +1343,7 @@ sub unshift_read_header {
 
 			die "upload without content length header not supported" if !$len;
 
-			print "start upload $path $ct $boundary\n" if $self->{debug};
+			$self->dprint("start upload $path $ct $boundary");
 
 			my $tmpfilename = get_upload_filename();
 			my $outfh = IO::File->new($tmpfilename, O_RDWR|O_CREAT|O_EXCL, 0600) ||
@@ -1571,7 +1581,7 @@ sub accept_connections {
 	    }
 
 	    if (!$self->{trusted_env} && !$self->check_host_access($reqstate->{peer_host})) {
-		print "$$: ABORT request from $reqstate->{peer_host} - access denied\n" if $self->{debug};
+		$self->dprint("ABORT request from $reqstate->{peer_host} - access denied");
 		$reqstate->{log}->{code} = 403;
 		$self->log_request($reqstate);
 		next;
@@ -1600,7 +1610,7 @@ sub accept_connections {
 		},
 		($self->{tls_ctx} ? (tls => "accept", tls_ctx => $self->{tls_ctx}) : ()));
 
-	    print "$$: ACCEPT FH" .  $clientfh->fileno() . " CONN$self->{conn_count}\n" if $self->{debug};
+	    $self->dprint("ACCEPT FH" .  $clientfh->fileno() . " CONN$self->{conn_count}");
 
 	    $self->push_request_header($reqstate);
 	}
