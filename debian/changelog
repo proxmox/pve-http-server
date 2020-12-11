@@ -1,3 +1,11 @@
+libpve-http-server-perl (3.1-1) pve pmg; urgency=medium
+
+  * accept connection phase: fix connection count leak
+
+  * accept connection phase: immediately close socket on early error
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 11 Dec 2020 08:39:36 +0100
+
 libpve-http-server-perl (3.0-6) pve pmg; urgency=medium
 
   * fix #2766: allow application/json as content-type for post/put requests
