@@ -14,6 +14,7 @@ sub read_proxy_config {
 
     # Note: evaluate with bash
     my $shcmd = ". $conffile;\n";
+    $shcmd .= 'echo \"LISTEN_IP:\$LISTEN_IP\";';
     $shcmd .= 'echo \"ALLOW_FROM:\$ALLOW_FROM\";';
     $shcmd .= 'echo \"DENY_FROM:\$DENY_FROM\";';
     $shcmd .= 'echo \"POLICY:\$POLICY\";';
@@ -36,6 +37,8 @@ sub read_proxy_config {
 		push @$ips, Net::IP->new($ip) || die Net::IP::Error() . "\n";
 	    }
 	    $res->{$key} = $ips;
+	} elsif ($key eq 'LISTEN_IP') {
+	    $res->{$key} = $value;
 	} elsif ($key eq 'POLICY') {
 	    die "unknown policy '$value'\n" if $value !~ m/^(allow|deny)$/;
 	    $res->{$key} = $value;
