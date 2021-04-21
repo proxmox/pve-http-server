@@ -812,7 +812,10 @@ sub handle_api2_request {
 	    $delay = 0 if $delay < 0;
 	}
 
-	if (defined(my $download = $res->{download})) {
+	my $download = $res->{download};
+	$download //= $res->{data}->{download}
+            if defined($res->{data}) && ref($res->{data}) eq 'HASH';
+	if (defined($download)) {
 	    send_file_start($self, $reqstate, $download);
 	    return;
 	}
