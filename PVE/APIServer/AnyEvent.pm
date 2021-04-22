@@ -410,8 +410,32 @@ sub send_file_start {
 	    my $mime;
 
 	    if (ref($download) eq 'HASH') {
-		$fh = $download->{fh};
 		$mime = $download->{'content-type'};
+
+		if ($download->{path} && $download->{stream} &&
+		    $reqstate->{request}->header('PVEDisableProxy'))
+		{
+		    # avoid double stream from a file, let the proxy handle it
+		    die "internal error: file proxy streaming only available for pvedaemon\n"
+			if !$self->{trusted_env};
+		    my $header = HTTP::Headers->new(
+			pvestreamfile => $download->{path},
+			Content_Type => $mime,
+		    );
+		    # we need some data so Content-Length gets set correctly and
+		    # the proxy doesn't wait for more data - place a canary
+		    my $resp = HTTP::Response->new(200, "OK", $header, "error canary");
+		    $self->response($reqstate, $resp);
+		    return;
+		}
+
+		if (!($fh = $download->{fh})) {
+		    my $path = $download->{path};
+		    die "internal error: {download} returned but neither fh not path given\n"
+			if !$path;
+		    sysopen($fh, "$path", O_NONBLOCK | O_RDONLY)
+			or die "open stream path '$path' for reading failed: $!\n";
+		}
 
 		if ($download->{stream}) {
 		    my $header = HTTP::Headers->new(Content_Type => $mime);
@@ -750,6 +774,7 @@ sub proxy_request {
 		eval {
 		    my $code = delete $hdr->{Status};
 		    my $msg = delete $hdr->{Reason};
+		    my $stream = delete $hdr->{pvestreamfile};
 		    delete $hdr->{URL};
 		    delete $hdr->{HTTPVersion};
 		    my $header = HTTP::Headers->new(%$hdr);
@@ -757,9 +782,16 @@ sub proxy_request {
 			$location =~ s|^http://localhost:85||;
 			$header->header(Location => $location);
 		    }
-		    my $resp = HTTP::Response->new($code, $msg, $header, $body);
-		    # Note: disable compression, because body is already compressed
-		    $self->response($reqstate, $resp, undef, 1);
+		    if ($stream) {
+			sysopen(my $fh, "$stream", O_NONBLOCK | O_RDONLY)
+			    or die "open stream path '$stream' for forwarding failed: $!\n";
+			my $resp = HTTP::Response->new($code, $msg, $header, undef);
+			$self->response($reqstate, $resp, undef, 1, 0, $fh);
+		    } else {
+			my $resp = HTTP::Response->new($code, $msg, $header, $body);
+			# Note: disable compression, because body is already compressed
+			$self->response($reqstate, $resp, undef, 1);
+		    }
 		};
 		warn $@ if $@;
 	    });
