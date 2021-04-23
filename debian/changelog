@@ -1,3 +1,15 @@
+libpve-http-server-perl (3.2-1) pve pmg; urgency=medium
+
+  * allow 'download' to be passed from API handler
+
+  * utils: add LISTEN_IP option in proxy configuration
+
+  * support streaming data form a file handle to a client
+
+  * allow stream download from path and over short-cutted pvedaemon-proxy
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 23 Apr 2021 13:54:04 +0200
+
 libpve-http-server-perl (3.1-1) pve pmg; urgency=medium
 
   * accept connection phase: fix connection count leak
