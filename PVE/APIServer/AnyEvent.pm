@@ -34,6 +34,7 @@ use PVE::SafeSyslog;
 use PVE::INotify;
 use PVE::Tools;
 use PVE::APIServer::Formatter;
+use PVE::APIServer::Utils;
 
 use Net::IP;
 use URI;
@@ -1662,6 +1663,7 @@ sub wait_end_loop {
 sub check_host_access {
     my ($self, $clientip) = @_;
 
+    $clientip = PVE::APIServer::Utils::normalize_v4_in_v6($clientip);
     my $cip = Net::IP->new($clientip);
 
     if (!$cip) {

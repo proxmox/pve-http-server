@@ -34,7 +34,7 @@ sub read_proxy_config {
 	    my $ips = [];
 	    foreach my $ip (split(/,/, $value)) {
 		$ip = "0/0" if $ip eq 'all';
-		push @$ips, Net::IP->new($ip) || die Net::IP::Error() . "\n";
+		push @$ips, Net::IP->new(normalize_v4_in_v6($ip)) || die Net::IP::Error() . "\n";
 	    }
 	    $res->{$key} = $ips;
 	} elsif ($key eq 'LISTEN_IP') {
@@ -55,6 +55,17 @@ sub read_proxy_config {
     }
 
     return $res;
+}
+
+sub normalize_v4_in_v6 {
+    my ($ip_text) = @_;
+
+    my $ip = Net::IP->new($ip_text) || die Net::IP::Error() . "\n";
+    my $v4_mapped_v6_prefix = Net::IP->new('::ffff:0:0/96');
+    if ($v4_mapped_v6_prefix->overlaps($ip)) {
+	return Net::IP::ip_get_embedded_ipv4($ip_text);
+    }
+    return $ip_text;
 }
 
 1;
