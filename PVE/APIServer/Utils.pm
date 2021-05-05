@@ -33,7 +33,11 @@ sub read_proxy_config {
 	if ($key eq 'ALLOW_FROM' || $key eq 'DENY_FROM') {
 	    my $ips = [];
 	    foreach my $ip (split(/,/, $value)) {
-		$ip = "0/0" if $ip eq 'all';
+		if ($ip eq 'all') {
+		    push @$ips, Net::IP->new('0/0') || die Net::IP::Error() . "\n";
+		    push @$ips, Net::IP->new('::/0') || die Net::IP::Error() . "\n";
+		    next;
+		}
 		push @$ips, Net::IP->new(normalize_v4_in_v6($ip)) || die Net::IP::Error() . "\n";
 	    }
 	    $res->{$key} = $ips;
