@@ -1,3 +1,11 @@
+libpve-http-server-perl (3.2-2) pve pmg; urgency=medium
+
+  * access control: correctly match v4-mapped-v6 addresses
+
+  * access control: also match any IPv6 in 'ALL'
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 07 May 2021 17:49:34 +0200
+
 libpve-http-server-perl (3.2-1) pve pmg; urgency=medium
 
   * allow 'download' to be passed from API handler
