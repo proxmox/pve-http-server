@@ -26,4 +26,5 @@ Depends: libanyevent-http-perl,
          ${perl:Depends},
 Breaks: pmg-api (<< 6.1-5), pve-manager (<< 6.1-6)
 Description: Proxmox Asynchrounous HTTP Server Implementation
- This is used to implement the PVE REST API.
+ This package is used as base to implement the REST API in all perl based
+ Proxmox projects.
