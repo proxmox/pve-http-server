@@ -650,11 +650,13 @@ sub websocket_proxy {
 
 	    # todo: use stop_read/start_read if write buffer grows to much
 
+	    # for backwards, compatibility,  we have to reply with the websocket
+	    # subprotocol from the request
 	    my $res = "$proto 101 Switching Protocols\015\012" .
 		"Upgrade: websocket\015\012" .
 		"Connection: upgrade\015\012" .
 		"Sec-WebSocket-Accept: $wsaccept\015\012" .
-		"Sec-WebSocket-Protocol: $wsproto\015\012" .
+		($wsproto ne "" ? "Sec-WebSocket-Protocol: $wsproto\015\012" : "") .
 		"\015\012";
 
 	    $self->dprint($res);
@@ -902,14 +904,7 @@ sub handle_api2_request {
 	    die "unable to upgrade to protocol '$upgrade'\n" if !$upgrade || ($upgrade ne 'websocket');
 	    my $wsver = $r->header('sec-websocket-version');
 	    die "unsupported websocket-version '$wsver'\n" if !$wsver || ($wsver ne '13');
-	    my $wsproto_str = $r->header('sec-websocket-protocol');
-	    die "missing websocket-protocol header" if !$wsproto_str;
-	    my $wsproto;
-	    foreach my $p (PVE::Tools::split_list($wsproto_str)) {
-		$wsproto = $p if !$wsproto && $p eq 'base64';
-		$wsproto = $p if $p eq 'binary';
-	    }
-	    die "unsupported websocket-protocol protocol '$wsproto_str'\n" if !$wsproto;
+	    my $wsproto = $r->header('sec-websocket-protocol') // "";
 	    my $wskey = $r->header('sec-websocket-key');
 	    die "missing websocket-key\n" if !$wskey;
 	    # Note: Digest::SHA::sha1_base64 has wrong padding
