@@ -496,15 +496,6 @@ sub websocket_proxy {
 
 	my $max_payload_size = 128*1024;
 
-	my $binary;
-	if ($wsproto eq 'binary') {
-	    $binary = 1;
-	} elsif ($wsproto eq 'base64') {
-	    $binary = 0;
-	} else {
-	    die "websocket_proxy: unsupported protocol '$wsproto'\n";
-	}
-
 	if ($param->{port}) {
 	    $remhost = 'localhost';
 	    $remport = $param->{port};
@@ -520,13 +511,9 @@ sub websocket_proxy {
 
 	    my $string;
 	    my $payload;
-	    if ($binary) {
-		$string = $opcode ? $opcode : "\x82"; # binary frame
-		$payload = $$data;
-	    } else {
-		$string = $opcode ? $opcode : "\x81"; # text frame
-		$payload = encode_base64($$data, '');
-	    }
+
+	    $string = $opcode ? $opcode : "\x82"; # binary frame
+	    $payload = $$data;
 
 	    my $payload_len = length($payload);
 	    if ($payload_len <= 125) {
@@ -634,8 +621,6 @@ sub websocket_proxy {
 			# (un-)apply mask
 			$payload ^= $mask;
 		    }
-
-		    $payload = decode_base64($payload) if !$binary;
 
 		    if ($opcode == 1 || $opcode == 2) {
 			$reqstate->{proxyhdl}->push_write($payload) if $reqstate->{proxyhdl};
