@@ -1,3 +1,11 @@
+libpve-http-server-perl (3.2-3) pve pmg; urgency=medium
+
+  * AnyEvent/websocket_proxy: remove 'base64' handling
+
+  * AnyEvent/websocket_proxy: drop handling of websocket subprotocols
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 18 May 2021 10:19:00 +0200
+
 libpve-http-server-perl (3.2-2) pve pmg; urgency=medium
 
   * access control: correctly match v4-mapped-v6 addresses
