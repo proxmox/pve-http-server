@@ -650,6 +650,8 @@ sub websocket_proxy {
 
 	    # todo: use stop_read/start_read if write buffer grows to much
 
+	    # FIXME: remove protocol in PVE/PMG 8.x
+	    #
 	    # for backwards, compatibility,  we have to reply with the websocket
 	    # subprotocol from the request
 	    my $res = "$proto 101 Switching Protocols\015\012" .
