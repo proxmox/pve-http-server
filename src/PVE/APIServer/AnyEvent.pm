@@ -114,7 +114,7 @@ sub log_aborted_request {
 }
 
 sub cleanup_reqstate {
-    my ($reqstate) = @_;
+    my ($reqstate, $deletetmpfile) = @_;
 
     delete $reqstate->{log};
     delete $reqstate->{request};
@@ -123,7 +123,7 @@ sub cleanup_reqstate {
     delete $reqstate->{starttime};
 
     if ($reqstate->{tmpfilename}) {
-	unlink $reqstate->{tmpfilename};
+	unlink $reqstate->{tmpfilename} if $deletetmpfile;
 	delete $reqstate->{tmpfilename};
     }
 }
@@ -131,7 +131,7 @@ sub cleanup_reqstate {
 sub client_do_disconnect {
     my ($self, $reqstate) = @_;
 
-    cleanup_reqstate($reqstate);
+    cleanup_reqstate($reqstate, 1);
 
     my $shutdown_hdl = sub {
 	my $hdl = shift;
@@ -168,7 +168,7 @@ sub client_do_disconnect {
 sub finish_response {
     my ($self, $reqstate) = @_;
 
-    cleanup_reqstate($reqstate);
+    cleanup_reqstate($reqstate, 0);
 
     my $hdl = $reqstate->{hdl};
     return if !$hdl; # already disconnected
