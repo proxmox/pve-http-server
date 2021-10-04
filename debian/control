@@ -2,8 +2,7 @@ Source: libpve-http-server-perl
 Section: perl
 Priority: optional
 Maintainer: Proxmox Support Team <support@proxmox.com>
-Build-Depends: debhelper (>= 12),
-               perl,
+Build-Depends: debhelper (>= 12), perl
 Standards-Version: 4.5.1
 Homepage: https://www.proxmox.com
 
@@ -16,8 +15,8 @@ Depends: libanyevent-http-perl,
          libhttp-date-perl,
          libhttp-message-perl,
          libio-socket-ssl-perl,
-         libjs-jquery,
          libjs-bootstrap,
+         libjs-jquery,
          libjson-perl,
          libnet-ip-perl,
          libpve-common-perl (>= 6.0-13),
