@@ -23,7 +23,9 @@ Depends: libanyevent-http-perl,
          libpve-common-perl (>= 6.0-13),
          liburi-perl,
          ${perl:Depends},
-Breaks: pmg-api (<< 6.1-5), pve-manager (<< 6.1-6)
+Breaks: libpve-storage-perl (<< 7.0-11),
+        pmg-api (<< 6.1-5),
+        pve-manager (<< 6.1-6),
 Description: Proxmox Asynchrounous HTTP Server Implementation
  This package is used as base to implement the REST API in all perl based
  Proxmox projects.
