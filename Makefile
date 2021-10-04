@@ -21,7 +21,7 @@ ${DEB}:
 
 .PHONY: upload
 upload: ${DEB}
-	tar cf - ${DEB} | ssh -X repoman@repo.proxmox.com -- upload --product pve,pmg --dist buster
+	tar cf - ${DEB} | ssh -X repoman@repo.proxmox.com -- upload --product pve,pmg --dist bullseye
 
 .PHONY: clean distclean
 distclean: clean
