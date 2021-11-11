@@ -144,7 +144,8 @@ sub client_do_disconnect {
     };
 
     if (my $proxyhdl = delete $reqstate->{proxyhdl}) {
-	&$shutdown_hdl($proxyhdl);
+	&$shutdown_hdl($proxyhdl)
+		if !$proxyhdl->{block_disconnect};
     }
 
     my $hdl = delete $reqstate->{hdl};
@@ -627,9 +628,10 @@ sub websocket_proxy {
 		    } elsif ($opcode == 8) {
 			my $statuscode = unpack ("n", $payload);
 			$self->dprint("websocket received close. status code: '$statuscode'");
-			if ($reqstate->{proxyhdl}) {
-			    $reqstate->{proxyhdl}->push_shutdown();
-			}
+			if (my $proxyhdl = $reqstate->{proxyhdl}) {
+			    $proxyhdl->{block_disconnect} = 1 if length $proxyhdl->{wbuf} > 0;
+			    $proxyhdl->push_shutdown();
+		        }
 			$hdl->push_shutdown();
 		    } elsif ($opcode == 9) {
 			# ping received, schedule pong
