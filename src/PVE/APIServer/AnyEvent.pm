@@ -1885,7 +1885,8 @@ sub new {
 	    $self->{ssl}->{dh} = 'skip2048';
 	}
 
-	my $tls_ctx_flags = &Net::SSLeay::OP_NO_COMPRESSION | &Net::SSLeay::OP_SINGLE_ECDH_USE | &Net::SSLeay::OP_SINGLE_DH_USE;
+	my $tls_ctx_flags = &Net::SSLeay::OP_NO_COMPRESSION | &Net::SSLeay::OP_SINGLE_ECDH_USE |
+	    &Net::SSLeay::OP_SINGLE_DH_USE | &Net::SSLeay::OP_NO_RENEGOTIATION;
 	if ( delete $self->{ssl}->{honor_cipher_order} ) {
 	    $tls_ctx_flags |= &Net::SSLeay::OP_CIPHER_SERVER_PREFERENCE;
 	}
