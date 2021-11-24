@@ -1,3 +1,13 @@
+libpve-http-server-perl (4.0-4) bullseye; urgency=medium
+
+  * webproxy: handle unflushed write buffer
+
+  * fix #3724: disable TLS renegotiation
+
+  * download-stream: allow the api call to set the content-encoding
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 24 Nov 2021 18:14:53 +0100
+
 libpve-http-server-perl (4.0-3) bullseye; urgency=medium
 
   * anyevent: move unlink from http-server to endpoint
