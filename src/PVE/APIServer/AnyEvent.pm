@@ -9,43 +9,47 @@ package PVE::APIServer::AnyEvent;
 
 use strict;
 use warnings;
-use Time::HiRes qw(usleep ualarm gettimeofday tv_interval);
-use Socket qw(IPPROTO_TCP TCP_NODELAY SOMAXCONN);
-use POSIX qw(strftime EINTR EAGAIN);
-use Fcntl;
-use IO::File;
-use File::stat qw();
-use File::Find;
-use MIME::Base64;
+
+use AnyEvent::HTTP;
+use AnyEvent::Handle;
+use AnyEvent::IO;
+use AnyEvent::Socket;
+# use AnyEvent::Strict; # only use this for debugging
+use AnyEvent::TLS;
+use AnyEvent::Util qw(guard fh_nonblocking WSAEWOULDBLOCK WSAEINPROGRESS);
+
+use Compress::Zlib;
 use Digest::MD5;
 use Digest::SHA;
-# use AnyEvent::Strict; # only use this for debugging
-use AnyEvent::Util qw(guard fh_nonblocking WSAEWOULDBLOCK WSAEINPROGRESS);
-use AnyEvent::Socket;
-use AnyEvent::Handle;
-use Net::SSLeay;
-use AnyEvent::TLS;
-use AnyEvent::IO;
-use AnyEvent::HTTP;
-use Fcntl ();
-use Compress::Zlib;
 use Encode;
-use PVE::SafeSyslog;
-use PVE::INotify;
-use PVE::Tools;
-use PVE::APIServer::Formatter;
-use PVE::APIServer::Utils;
+use Fcntl ();
+use Fcntl;
+use File::Find;
+use File::stat qw();
+use IO::File;
+use MIME::Base64;
+use Net::SSLeay;
+use POSIX qw(strftime EINTR EAGAIN);
+use Socket qw(IPPROTO_TCP TCP_NODELAY SOMAXCONN);
+use Time::HiRes qw(usleep ualarm gettimeofday tv_interval);
 
-use Net::IP;
-use URI;
-use URI::Escape;
-use HTTP::Status qw(:constants);
+#use Data::Dumper; # FIXME: remove, just use: print to_json([$var], {pretty => 1}) ."\n";
 use HTTP::Date;
 use HTTP::Headers;
 use HTTP::Request;
 use HTTP::Response;
-use Data::Dumper;
+use HTTP::Status qw(:constants);
 use JSON;
+use Net::IP;
+use URI::Escape;
+use URI;
+
+use PVE::INotify;
+use PVE::SafeSyslog;
+use PVE::Tools;
+
+use PVE::APIServer::Formatter;
+use PVE::APIServer::Utils;
 
 my $limit_max_headers = 64;
 my $limit_max_header_size = 8*1024;
