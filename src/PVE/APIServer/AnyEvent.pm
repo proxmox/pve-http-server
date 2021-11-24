@@ -413,6 +413,7 @@ sub send_file_start {
 
 	    if (ref($download) eq 'HASH') {
 		$mime = $download->{'content-type'};
+		my $encoding = $download->{'content-encoding'};
 
 		if ($download->{path} && $download->{stream} &&
 		    $reqstate->{request}->header('PVEDisableProxy'))
@@ -424,6 +425,7 @@ sub send_file_start {
 			pvestreamfile => $download->{path},
 			Content_Type => $mime,
 		    );
+		    $header->header('Content-Encoding' => $encoding) if defined($encoding);
 		    # we need some data so Content-Length gets set correctly and
 		    # the proxy doesn't wait for more data - place a canary
 		    my $resp = HTTP::Response->new(200, "OK", $header, "error canary");
@@ -441,6 +443,7 @@ sub send_file_start {
 
 		if ($download->{stream}) {
 		    my $header = HTTP::Headers->new(Content_Type => $mime);
+		    $header->header('Content-Encoding' => $encoding) if defined($encoding);
 		    my $resp = HTTP::Response->new(200, "OK", $header);
 		    $self->response($reqstate, $resp, undef, 1, 0, $fh);
 		    return;
