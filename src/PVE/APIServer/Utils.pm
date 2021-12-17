@@ -21,6 +21,7 @@ sub read_proxy_config {
     $shcmd .= 'echo \"CIPHERS:\$CIPHERS\";';
     $shcmd .= 'echo \"CIPHERSUITES:\$CIPHERSUITES\";';
     $shcmd .= 'echo \"DHPARAMS:\$DHPARAMS\";';
+    $shcmd .= 'echo \"TLS_KEY_FILE:\$TLS_KEY_FILE\";';
     $shcmd .= 'echo \"HONOR_CIPHER_ORDER:\$HONOR_CIPHER_ORDER\";';
     $shcmd .= 'echo \"COMPRESSION:\$COMPRESSION\";';
 
@@ -52,6 +53,8 @@ sub read_proxy_config {
 	} elsif ($key eq 'CIPHERSUITES') {
 	    $res->{$key} = $value;
 	} elsif ($key eq 'DHPARAMS') {
+	    $res->{$key} = $value;
+	} elsif ($key eq 'TLS_KEY_FILE') {
 	    $res->{$key} = $value;
 	} elsif ($key eq 'HONOR_CIPHER_ORDER' || $key eq 'COMPRESSION') {
 	    die "unknown value '$value' - use 0 or 1\n" if $value !~ m/^(0|1)$/;
