@@ -1908,6 +1908,11 @@ sub new {
 	if (delete $self->{ssl}->{honor_cipher_order}) {
 	    $tls_ctx_flags |= &Net::SSLeay::OP_CIPHER_SERVER_PREFERENCE;
 	}
+	# workaround until anyevent supports disabling TLS 1.3 directly
+	if (exists($self->{ssl}->{tlsv1_3}) && !$self->{ssl}->{tlsv1_3}) {
+	    $tls_ctx_flags |= &Net::SSLeay::OP_NO_TLSv1_3;
+	}
+
 
 	$self->{tls_ctx} = AnyEvent::TLS->new(%{$self->{ssl}});
 	Net::SSLeay::CTX_set_options($self->{tls_ctx}->{ctx}, $tls_ctx_flags);

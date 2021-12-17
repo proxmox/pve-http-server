@@ -24,10 +24,19 @@ sub read_proxy_config {
     $shcmd .= 'echo \"TLS_KEY_FILE:\$TLS_KEY_FILE\";';
     $shcmd .= 'echo \"HONOR_CIPHER_ORDER:\$HONOR_CIPHER_ORDER\";';
     $shcmd .= 'echo \"COMPRESSION:\$COMPRESSION\";';
+    $shcmd .= 'echo \"DISABLE_TLS_1_2:\$DISABLE_TLS_1_2\";';
+    $shcmd .= 'echo \"DISABLE_TLS_1_3:\$DISABLE_TLS_1_3\";';
 
     my $data = -f $conffile ? `bash -c "$shcmd"` : '';
 
     my $res = {};
+
+    my $boolean_options = [
+	'HONOR_CIPHER_ORDER',
+	'COMPRESSION',
+	'DISABLE_TLS_1_2',
+	'DISABLE_TLS_1_3',
+    ];
 
     while ($data =~ s/^(.*)\n//) {
 	my ($key, $value) = split(/:/, $1, 2);
@@ -56,7 +65,7 @@ sub read_proxy_config {
 	    $res->{$key} = $value;
 	} elsif ($key eq 'TLS_KEY_FILE') {
 	    $res->{$key} = $value;
-	} elsif ($key eq 'HONOR_CIPHER_ORDER' || $key eq 'COMPRESSION') {
+	} elsif (grep { $key eq $_ } @$boolean_options) {
 	    die "unknown value '$value' - use 0 or 1\n" if $value !~ m/^(0|1)$/;
 	    $res->{$key} = $value;
 	} else {
