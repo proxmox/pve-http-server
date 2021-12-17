@@ -1889,6 +1889,9 @@ sub new {
 	    honor_cipher_order => 1,
 	};
 
+	# workaround until anyevent supports TLS 1.3 ciphersuites directly
+	my $ciphersuites = delete $self->{ssl}->{ciphersuites};
+
 	foreach my $k (keys %$ssl_defaults) {
 	    $self->{ssl}->{$k} //= $ssl_defaults->{$k};
 	}
@@ -1908,6 +1911,7 @@ sub new {
 
 	$self->{tls_ctx} = AnyEvent::TLS->new(%{$self->{ssl}});
 	Net::SSLeay::CTX_set_options($self->{tls_ctx}->{ctx}, $tls_ctx_flags);
+	Net::SSLeay::CTX_set_ciphersuites($self->{tls_ctx}->{ctx}, $ciphersuites) if defined($ciphersuites);
     }
 
     if ($self->{spiceproxy}) {
