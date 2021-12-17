@@ -636,7 +636,8 @@ sub websocket_proxy {
 			my $statuscode = unpack ("n", $payload);
 			$self->dprint("websocket received close. status code: '$statuscode'");
 			if (my $proxyhdl = $reqstate->{proxyhdl}) {
-			    $proxyhdl->{block_disconnect} = 1 if length $proxyhdl->{wbuf} > 0;
+			    $proxyhdl->{block_disconnect} = 1 if length $proxyhdl->{wbuf};
+
 			    $proxyhdl->push_shutdown();
 		        }
 			$hdl->push_shutdown();
