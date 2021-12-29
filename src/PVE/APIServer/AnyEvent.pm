@@ -361,6 +361,7 @@ sub response {
     } elsif ($delay && $delay > 0) {
 	my $w; $w = AnyEvent->timer(after => $delay, cb => sub {
 	    undef $w; # delete reference
+	    return if !$reqstate->{hdl}; # already disconnected
 	    $reqstate->{hdl}->push_write($res);
 	    $self->finish_response($reqstate);
 	});
