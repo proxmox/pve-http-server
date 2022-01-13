@@ -1253,10 +1253,11 @@ sub file_upload_multipart {
 	    } else {
 		my $elapsed = tv_interval($rstate->{starttime});
 
-		my $rate = int($rstate->{bytes}/($elapsed*1024*1024));
-		syslog('info', "multipart upload complete " .
-		       "(size: %d time: %ds rate: %.2fMiB/s md5sum: $rstate->{md5sum})",
-		       $rstate->{bytes}, $elapsed, $rate);
+		my $rate = int($rstate->{bytes} / ($elapsed * 1024 * 1024));
+		syslog('info',
+		    "multipart upload complete (size: %d time: %ds rate: %.2fMiB/s md5sum: %s)",
+		     $rstate->{bytes}, $elapsed, $rate, $rstate->{md5sum}
+		);
 		$self->handle_api2_request($reqstate, $auth, $method, $path, $rstate);
 	    }
 	}
@@ -1494,7 +1495,9 @@ sub unshift_read_header {
 			    outfh => $outfh,
 			};
 			$reqstate->{tmpfilename} = $tmpfilename;
-			$reqstate->{hdl}->on_read(sub { $self->file_upload_multipart($reqstate, $auth, $method, $path, $state); });
+			$reqstate->{hdl}->on_read(sub {
+			    $self->file_upload_multipart($reqstate, $auth, $method, $path, $state);
+			});
 			return;
 		    }
 
