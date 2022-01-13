@@ -880,7 +880,7 @@ sub handle_api2_request {
 	    $params = extract_params($r, $method);
 	}
 
-	delete $params->{_dc}; # remove disable cache parameter
+	delete $params->{_dc} if $params; # remove disable cache parameter
 
 	my $clientip = $reqstate->{peer_host};
 
