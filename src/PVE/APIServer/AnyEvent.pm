@@ -1916,7 +1916,10 @@ sub new {
 
 	$self->{tls_ctx} = AnyEvent::TLS->new(%{$self->{ssl}});
 	Net::SSLeay::CTX_set_options($self->{tls_ctx}->{ctx}, $tls_ctx_flags);
-	Net::SSLeay::CTX_set_ciphersuites($self->{tls_ctx}->{ctx}, $ciphersuites) if defined($ciphersuites);
+	if (defined($ciphersuites)) {
+	    warn "Failed to set TLS 1.3 ciphersuites '$ciphersuites'\n"
+		if !Net::SSLeay::CTX_set_ciphersuites($self->{tls_ctx}->{ctx}, $ciphersuites);
+	}
     }
 
     if ($self->{spiceproxy}) {
