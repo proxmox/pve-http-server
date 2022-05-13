@@ -1185,7 +1185,6 @@ sub file_upload_multipart {
     eval {
 	my $boundary = $rstate->{boundary};
 	my $hdl = $reqstate->{hdl};
-
 	my $startlen = length($hdl->{rbuf});
 
 	if ($rstate->{phase} == 0) { # skip everything until start
@@ -1269,7 +1268,7 @@ sub file_upload_multipart {
 	    substr($hdl->{rbuf}, 0, $len, ''); # empty rbuf
 	}
 
-	$rstate->{read} += ($startlen - length($hdl->{rbuf}));
+	$rstate->{read} += $startlen - length($hdl->{rbuf});
 
 	if (!$rstate->{done} && ($rstate->{read} + length($hdl->{rbuf})) >= $rstate->{size}) {
 	    $rstate->{done} = 1; # make sure we dont get called twice
