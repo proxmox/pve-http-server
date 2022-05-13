@@ -1182,62 +1182,81 @@ sub handle_request {
 sub file_upload_multipart {
     my ($self, $reqstate, $auth, $method, $path, $rstate) = @_;
 
+    my $trim = sub {
+	my ($string) = @_;
+	$_[0] =~ /\s*(\S+)/;
+	return $1;
+    };
+
     eval {
 	my $boundary = $rstate->{boundary};
 	my $hdl = $reqstate->{hdl};
 	my $startlen = length($hdl->{rbuf});
 
-	if ($rstate->{phase} == 0) { # skip everything until start
-	    if ($hdl->{rbuf} =~ s/^.*?--\Q$boundary\E  \015?\012
-                       ((?:[^\015]+\015\012)* ) \015?\012//xs) {
-		my $header = $1;
-		my ($ct, $disp, $name, $filename);
-		foreach my $line (split(/\015?\012/, $header)) {
-		    # assume we have single line headers
-		    if ($line =~ m/^Content-Type\s*:\s*(.*)/i) {
-			$ct = parse_content_type($1);
-		    } elsif ($line =~ m/^Content-Disposition\s*:\s*(.*)/i) {
-			($disp, $name, $filename) = parse_content_disposition($1);
-		    }
-		}
+	my $newline = qr/\015?\012/;
+	my $delimiter = qr/--\Q$boundary\E${newline}/;
+	my $closeDelimiter = qr/--\Q$boundary\E--${newline}/;
 
-		if (!($disp && $disp eq 'form-data' && $name)) {
-		    syslog('err', "wrong content disposition in multipart - abort upload");
-		    $rstate->{phase} = -1;
-		} else {
+	my $check_disposition = sub {
+	    my ($disp) = @_;
+	    die "wrong Content-Disposition in multipart, expected `form-data` - abort upload"
+		if $disp ne 'form-data';
+	};
 
-		    $rstate->{fieldname} = $name;
+	# Phase 0 - preserve boundary, but remove everything before
+	if ($rstate->{phase} == 0 && $hdl->{rbuf} =~ s/^.*?($delimiter)/$1/xs) {
+	    $rstate->{read} += $startlen - length($hdl->{rbuf});
+	    $rstate->{phase} = 1;
+	}
 
-		    if ($filename) {
-			if ($name eq 'filename') {
-			    # found file upload data
-			    $rstate->{phase} = 1;
-			    $rstate->{filename} = $filename;
-			} else {
-			    syslog('err', "wrong field name for file upload - abort upload");
-			    $rstate->{phase} = -1;
-			}
-		    } else {
-			# found form data for field $name
-			$rstate->{phase} = 2;
-		    }
-		}
-	    } else {
-		my $len = length($hdl->{rbuf});
-		substr($hdl->{rbuf}, 0, $len - $rstate->{maxheader}, '')
-		    if $len > $rstate->{maxheader}; # skip garbage
+	# Phase 1 - parse payload without file data
+	if ($rstate->{phase} == 1) {
+	    if ($hdl->{rbuf} =~
+		s/^${delimiter}Content-Disposition: (.*?); name="content"(.*?)($delimiter)/$3/s
+	    ) {
+		$check_disposition->($1);
+		$rstate->{params}->{content} = $trim->($2);
 	    }
-	} elsif ($rstate->{phase} == 1) { # inside file - dump until end marker
-	    if ($hdl->{rbuf} =~ s/^(.*?)\015?\012(--\Q$boundary\E(--)? \015?\012(.*))$/$2/xs) {
+
+	    if ( $hdl->{rbuf} =~
+		s/^${delimiter}Content-Disposition: (.*?); name="checksum-algorithm"(.*?)($delimiter)/$3/s
+	    ) {
+		$check_disposition->($1);
+		$rstate->{params}->{"checksum-algorithm"} = $trim->($2);
+	    }
+
+	    if ( $hdl->{rbuf} =~
+		s/^${delimiter}Content-Disposition: (.*?); name="checksum"(.*?)($delimiter)/$3/s
+	    ) {
+		$check_disposition->($1);
+		$rstate->{params}->{checksum} = $trim->($2);
+	    }
+
+	    if ( $hdl->{rbuf} =~
+		s/^${delimiter}
+		Content-Disposition:\ (.*?);\ name="(.*?)";\ filename="([^"]+)"${newline}
+		Content-Type:\ \S*\s+
+		//sxx
+	    ) {
+		$check_disposition->($1);
+		die "wrong field `name` for file upload, expected `filename` - abort upload"
+		    if $2 ne "filename";
+		$rstate->{phase} = 2;
+		$rstate->{params}->{filename} = $trim->($3);
+	    }
+	}
+
+	# Phase 2 - dump content into file
+	if ($rstate->{phase} == 2) {
+	    if ($hdl->{rbuf} =~ s/^(.*?)${newline}?+${closeDelimiter}.*$//s) {
 		my ($rest, $eof) = ($1, $3);
 		my $len = length($rest);
 		die "write to temporary file failed - $!"
 		    if syswrite($rstate->{outfh}, $rest) != $len;
 		$rstate->{ctx}->add($rest);
-		$rstate->{params}->{filename} = $rstate->{filename};
 		$rstate->{md5sum} = $rstate->{ctx}->hexdigest;
 		$rstate->{bytes} += $len;
-		$rstate->{phase} =  $eof ? 100 : 0;
+		$rstate->{phase} =  100;
 	    } else {
 		my $len = length($hdl->{rbuf});
 		my $wlen = $len - $rstate->{boundlen};
@@ -1249,42 +1268,29 @@ sub file_upload_multipart {
 		    $rstate->{ctx}->add($data);
 		}
 	    }
-	} elsif ($rstate->{phase} == 2) { # inside normal field
+	}
 
-	    if ($hdl->{rbuf} =~ s/^(.*?)\015?\012(--\Q$boundary\E(--)? \015?\012(.*))$/$2/xs) {
-		my ($rest, $eof) = ($1, $3);
-		my $len = length($rest);
-		$rstate->{post_size} += $len;
-		if ($rstate->{post_size} < $limit_max_post) {
-		    $rstate->{params}->{$rstate->{fieldname}} = $rest;
-		    $rstate->{phase} = $eof ? 100 : 0;
-		} else {
-		    syslog('err', "form data to large - abort upload");
-		    $rstate->{phase} = -1; # skip
-		}
-	    }
-	} else { # skip
-	    my $len = length($hdl->{rbuf});
-	    substr($hdl->{rbuf}, 0, $len, ''); # empty rbuf
+	# Phase 100 - transfer finished
+	if ($rstate->{phase} == 100) {
+	    my $elapsed = tv_interval($rstate->{starttime});
+
+	    my $rate = int($rstate->{bytes} / ($elapsed * 1024 * 1024));
+	    syslog('info',
+		"multipart upload complete (size: %d time: %ds rate: %.2fMiB/s md5sum: %s)",
+		$rstate->{bytes}, $elapsed, $rate, $rstate->{md5sum}
+	    );
+	    $self->handle_api2_request($reqstate, $auth, $method, $path, $rstate);
 	}
 
 	$rstate->{read} += $startlen - length($hdl->{rbuf});
 
-	if (!$rstate->{done} && ($rstate->{read} + length($hdl->{rbuf})) >= $rstate->{size}) {
-	    $rstate->{done} = 1; # make sure we dont get called twice
-	    if ($rstate->{phase} < 0 || !$rstate->{md5sum}) {
-		die "upload failed\n";
-	    } else {
-		my $elapsed = tv_interval($rstate->{starttime});
-
-		my $rate = int($rstate->{bytes} / ($elapsed * 1024 * 1024));
-		syslog('info',
-		    "multipart upload complete (size: %d time: %ds rate: %.2fMiB/s md5sum: %s)",
-		     $rstate->{bytes}, $elapsed, $rate, $rstate->{md5sum}
-		);
-		$self->handle_api2_request($reqstate, $auth, $method, $path, $rstate);
-	    }
+	if (
+	    $rstate->{read} + length($hdl->{rbuf}) >= $rstate->{size}
+	    && $rstate->{phase} != 100
+	) {
+	    die "upload failed";
 	}
+
     };
     if (my $err = $@) {
 	syslog('err', $err);
