@@ -91,7 +91,7 @@ sub render_page {
 	text => 'Home'}};
 
     foreach my $comp (@pcomp) {
-	$href .= "/$comp";
+	$href .= "/".encode_entities($comp);
 	push @$items, { tag => 'li', cn => {
 	    tag => 'a',
 	    href => $href,
@@ -214,7 +214,7 @@ PVE::APIServer::Formatter::register_formatter($portal_format, sub {
 		    push @$items, {
 			tag => 'a',
 			class => 'list-group-item',
-			href => "$path/$value",
+			href => "$path/".encode_entities($value),
 			cn => [
 			    {
 				tag => 'h4',
