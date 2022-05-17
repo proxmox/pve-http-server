@@ -1,3 +1,9 @@
+libpve-http-server-perl (3.2-4) buster; urgency=medium
+
+  * html formatter: encode href attributes for API debug viewer
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 17 May 2022 16:43:04 +0200
+
 libpve-http-server-perl (3.2-3) pve pmg; urgency=medium
 
   * AnyEvent/websocket_proxy: remove 'base64' handling
