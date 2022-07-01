@@ -288,8 +288,15 @@ sub response {
 
     my $code = $resp->code;
     my $msg = $resp->message || HTTP::Status::status_message($code);
-    ($msg) = $msg =~m/^(.*)$/m;
     my $content = $resp->content;
+
+    # multiline mode only checks \n for $, so explicitly check for any \n or \r afterwards
+    ($msg) = $msg =~ m/^(.*)$/m;
+    if ($msg =~ /[\r\n]/) {
+	$code = 400; # bad request from user
+	$msg = HTTP::Status::status_message($code);
+	$content = '';
+    }
 
     if ($code =~ /^(1\d\d|[23]04)$/) {
 	# make sure informational, no content and not modified response send no content
