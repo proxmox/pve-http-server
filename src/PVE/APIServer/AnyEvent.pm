@@ -292,7 +292,7 @@ sub response {
     my $content = $resp->content;
 
     if ($code =~ /^(1\d\d|[23]04)$/) {
-	# make sure content we have no content
+	# make sure informational, no content and not modified response send no content
 	$content = "";
     }
 
