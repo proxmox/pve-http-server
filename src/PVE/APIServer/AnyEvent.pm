@@ -699,10 +699,12 @@ sub proxy_request {
 	    return;
 	}
 
+	my $may_stream_file;
 	if ($host eq 'localhost') {
 	    $target = "http://$host:85$uri";
 	    # keep alive for localhost is not worth (connection setup is about 0.2ms)
 	    $keep_alive = 0;
+	    $may_stream_file = 1;
 	} elsif (Net::IP::ip_is_ipv6($host)) {
 	    $target = "https://[$host]:8006$uri";
 	} else {
@@ -788,6 +790,10 @@ sub proxy_request {
 			$header->header(Location => $location);
 		    }
 		    if ($stream) {
+			if (!$may_stream_file) {
+			    $self->error($reqstate, 403, 'streaming denied');
+			    return;
+			}
 			sysopen(my $fh, "$stream", O_NONBLOCK | O_RDONLY)
 			    or die "open stream path '$stream' for forwarding failed: $!\n";
 			my $resp = HTTP::Response->new($code, $msg, $header, undef);
