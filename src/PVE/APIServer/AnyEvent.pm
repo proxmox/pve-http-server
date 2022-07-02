@@ -691,6 +691,14 @@ sub proxy_request {
     eval {
 	my $target;
 	my $keep_alive = 1;
+
+	# stringify URI object and verify it starts with a slash
+	$uri = "$uri";
+	if ($uri !~ m@^/@) {
+	    $self->error($reqstate, 400, "invalid proxy uri");
+	    return;
+	}
+
 	if ($host eq 'localhost') {
 	    $target = "http://$host:85$uri";
 	    # keep alive for localhost is not worth (connection setup is about 0.2ms)
