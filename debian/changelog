@@ -1,3 +1,16 @@
+libpve-http-server-perl (3.2-5) buster; urgency=medium
+
+  * requests: assert that there is no @ in the URLs authority
+
+  * pass through streaming: only allow from privileged local pvedaemon
+    as safety net
+
+  * proxy request: assert that API url starts with a slash
+
+  * response: forbid linefeeds in response status message
+
+ -- Proxmox Support Team <support@proxmox.com>  Sat, 02 Jul 2022 09:23:41 +0200
+
 libpve-http-server-perl (3.2-4) buster; urgency=medium
 
   * html formatter: encode href attributes for API debug viewer
