@@ -1560,6 +1560,11 @@ sub push_request_header {
 			$self->error($reqstate, 506, "http protocol version $maj.$min not supported");
 			return;
 		    }
+		    if ($url =~ m|^[^/]*@|) {
+			# if an '@' comes before the first slash proxy forwarding might consider
+			# the frist part of the url to be part of an authority...
+			$self->error($reqstate, 400, "invalid url");
+		    }
 
 		    $self->{request_count}++; # only count valid request headers
 		    if ($self->{request_count} >= $self->{max_requests}) {
