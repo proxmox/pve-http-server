@@ -1463,8 +1463,7 @@ sub unshift_read_header {
 		    }
 
 		    my $ctype = $r->header('Content-Type');
-		    my ($ct, $boundary);
-		    ($ct, $boundary)= parse_content_type($ctype) if $ctype;
+		    my ($ct, $boundary) = $ctype ? parse_content_type($ctype) : ();
 
 		    if ($auth->{isUpload} && !$self->{trusted_env}) {
 			die "upload 'Content-Type '$ctype' not implemented\n"
