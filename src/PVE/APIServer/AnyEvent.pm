@@ -1183,7 +1183,6 @@ sub file_upload_multipart {
     my ($self, $reqstate, $auth, $method, $path, $rstate) = @_;
 
     my $trim = sub {
-	my ($string) = @_;
 	$_[0] =~ /\s*(\S+)/;
 	return $1;
     };
@@ -1249,7 +1248,7 @@ sub file_upload_multipart {
 	# Phase 2 - dump content into file
 	if ($rstate->{phase} == 2) {
 	    if ($hdl->{rbuf} =~ s/^(.*?)${newline}?+${closeDelimiter}.*$//s) {
-		my ($rest, $eof) = ($1, $3);
+		my $rest = $1;
 		my $len = length($rest);
 		die "write to temporary file failed - $!"
 		    if syswrite($rstate->{outfh}, $rest) != $len;
