@@ -1179,6 +1179,10 @@ sub handle_request {
     }
 }
 
+my sub assert_form_disposition {
+    die "wrong Content-Disposition '$_[0]' in multipart, expected 'form-data'\n" if $_[0] ne 'form-data';
+}
+
 sub file_upload_multipart {
     my ($self, $reqstate, $auth, $method, $path, $rstate) = @_;
 
@@ -1192,52 +1196,36 @@ sub file_upload_multipart {
 	my $hdl = $reqstate->{hdl};
 	my $startlen = length($hdl->{rbuf});
 
-	my $newline = qr/\015?\012/;
-	my $delimiter = qr/--\Q$boundary\E${newline}/;
-	my $closeDelimiter = qr/--\Q$boundary\E--${newline}/;
-
-	my $check_disposition = sub {
-	    my ($disp) = @_;
-	    die "wrong Content-Disposition in multipart, expected `form-data` - abort upload"
-		if $disp ne 'form-data';
-	};
+	my $newline_re = qr/\015?\012/;
+	my $delim_re = qr/--\Q$boundary\E${newline_re}/;
+	my $close_delim_re = qr/--\Q$boundary\E--${newline_re}/;
 
 	# Phase 0 - preserve boundary, but remove everything before
-	if ($rstate->{phase} == 0 && $hdl->{rbuf} =~ s/^.*?($delimiter)/$1/xs) {
+	if ($rstate->{phase} == 0 && $hdl->{rbuf} =~ s/^.*?($delim_re)/$1/s) {
 	    $rstate->{read} += $startlen - length($hdl->{rbuf});
 	    $rstate->{phase} = 1;
 	}
 
-	# Phase 1 - parse payload without file data
-	if ($rstate->{phase} == 1) {
+	my $extract_form_disposition = sub {
+	    my ($name) = @_;
+	    if ($hdl->{rbuf} =~ s/^${delim_re}Content-Disposition: (.*?); name="$name"(.*?)($delim_re)/$3/s) {
+		assert_form_disposition($1);
+		$rstate->{params}->{$name} = $trim->($2);
+	    }
+	};
+
+	if ($rstate->{phase} == 1) { # Phase 1 - parse payload without file data
+	    $extract_form_disposition->('content');
+	    $extract_form_disposition->('checksum-algorithm');
+	    $extract_form_disposition->('checksum');
+
 	    if ($hdl->{rbuf} =~
-		s/^${delimiter}Content-Disposition: (.*?); name="content"(.*?)($delimiter)/$3/s
-	    ) {
-		$check_disposition->($1);
-		$rstate->{params}->{content} = $trim->($2);
-	    }
-
-	    if ( $hdl->{rbuf} =~
-		s/^${delimiter}Content-Disposition: (.*?); name="checksum-algorithm"(.*?)($delimiter)/$3/s
-	    ) {
-		$check_disposition->($1);
-		$rstate->{params}->{"checksum-algorithm"} = $trim->($2);
-	    }
-
-	    if ( $hdl->{rbuf} =~
-		s/^${delimiter}Content-Disposition: (.*?); name="checksum"(.*?)($delimiter)/$3/s
-	    ) {
-		$check_disposition->($1);
-		$rstate->{params}->{checksum} = $trim->($2);
-	    }
-
-	    if ( $hdl->{rbuf} =~
-		s/^${delimiter}
-		Content-Disposition:\ (.*?);\ name="(.*?)";\ filename="([^"]+)"${newline}
+		s/^${delim_re}
+		Content-Disposition:\ (.*?);\ name="(.*?)";\ filename="([^"]+)"${newline_re}
 		Content-Type:\ \S*\s+
 		//sxx
 	    ) {
-		$check_disposition->($1);
+		assert_form_disposition($1);
 		die "wrong field `name` for file upload, expected `filename` - abort upload"
 		    if $2 ne "filename";
 		$rstate->{phase} = 2;
@@ -1247,7 +1235,7 @@ sub file_upload_multipart {
 
 	# Phase 2 - dump content into file
 	if ($rstate->{phase} == 2) {
-	    if ($hdl->{rbuf} =~ s/^(.*?)${newline}?+${closeDelimiter}.*$//s) {
+	    if ($hdl->{rbuf} =~ s/^(.*?)${newline_re}?+${close_delim_re}.*$//s) {
 		my $rest = $1;
 		my $len = length($rest);
 		die "write to temporary file failed - $!"
