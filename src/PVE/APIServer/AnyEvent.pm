@@ -1226,15 +1226,13 @@ sub file_upload_multipart {
 		//sxx
 	    ) {
 		assert_form_disposition($1);
-		die "wrong field `name` for file upload, expected `filename` - abort upload"
-		    if $2 ne "filename";
+		die "wrong field name '$2' for file upload, expected 'filename'" if $2 ne "filename";
 		$rstate->{phase} = 2;
 		$rstate->{params}->{filename} = $trim->($3);
 	    }
 	}
 
-	# Phase 2 - dump content into file
-	if ($rstate->{phase} == 2) {
+	if ($rstate->{phase} == 2) { # Phase 2 - dump content into file
 	    my ($data, $write_length);
 	    if ($hdl->{rbuf} =~ s/^(.*?)${newline_re}?+${close_delim_re}.*$//s) {
 		$data = $1;
@@ -1252,28 +1250,21 @@ sub file_upload_multipart {
 	    }
 	}
 
-	# Phase 100 - transfer finished
-	if ($rstate->{phase} == 100) {
+	if ($rstate->{phase} == 100) { # Phase 100 - transfer finished
 	    $rstate->{md5sum} = $rstate->{ctx}->hexdigest;
 	    my $elapsed = tv_interval($rstate->{starttime});
 
-	    my $rate = int($rstate->{bytes} / ($elapsed * 1024 * 1024));
-	    syslog('info',
-		"multipart upload complete (size: %d time: %ds rate: %.2fMiB/s md5sum: %s)",
-		$rstate->{bytes}, $elapsed, $rate, $rstate->{md5sum}
+	    syslog('info', "multipart upload complete (size: %d time: %.1fs rate: %.2fMiB/s md5sum: %s)",
+		$rstate->{bytes}, $elapsed, $rstate->{bytes} / ($elapsed * 1024 * 1024), $rstate->{md5sum}
 	    );
 	    $self->handle_api2_request($reqstate, $auth, $method, $path, $rstate);
 	}
 
 	$rstate->{read} += $startlen - length($hdl->{rbuf});
 
-	if (
-	    $rstate->{read} + length($hdl->{rbuf}) >= $rstate->{size}
-	    && $rstate->{phase} != 100
-	) {
+	if ($rstate->{read} + length($hdl->{rbuf}) >= $rstate->{size} && $rstate->{phase} != 100) {
 	    die "upload failed";
 	}
-
     };
     if (my $err = $@) {
 	syslog('err', $err);
