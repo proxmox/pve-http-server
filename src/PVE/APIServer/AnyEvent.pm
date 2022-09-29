@@ -1235,30 +1235,26 @@ sub file_upload_multipart {
 
 	# Phase 2 - dump content into file
 	if ($rstate->{phase} == 2) {
+	    my ($data, $write_length);
 	    if ($hdl->{rbuf} =~ s/^(.*?)${newline_re}?+${close_delim_re}.*$//s) {
-		my $rest = $1;
-		my $len = length($rest);
-		die "write to temporary file failed - $!"
-		    if syswrite($rstate->{outfh}, $rest) != $len;
-		$rstate->{ctx}->add($rest);
-		$rstate->{md5sum} = $rstate->{ctx}->hexdigest;
-		$rstate->{bytes} += $len;
+		$data = $1;
+		$write_length = length($data);
 		$rstate->{phase} =  100;
 	    } else {
-		my $len = length($hdl->{rbuf});
-		my $wlen = $len - $rstate->{boundlen};
-		if ($wlen > 0) {
-		    my $data = substr($hdl->{rbuf}, 0, $wlen, '');
-		    die "write to temporary file failed - $!"
-			if syswrite($rstate->{outfh}, $data) != $wlen;
-		    $rstate->{bytes} += $wlen;
-		    $rstate->{ctx}->add($data);
-		}
+		$write_length = length($hdl->{rbuf}) - $rstate->{boundlen};
+		$data = substr($hdl->{rbuf}, 0, $write_length, '') if $write_length > 0;
+	    }
+
+	    if ($write_length > 0) {
+		syswrite($rstate->{outfh}, $data) == $write_length or die "write to temporary file failed - $!\n";
+		$rstate->{bytes} += $write_length;
+		$rstate->{ctx}->add($data);
 	    }
 	}
 
 	# Phase 100 - transfer finished
 	if ($rstate->{phase} == 100) {
+	    $rstate->{md5sum} = $rstate->{ctx}->hexdigest;
 	    my $elapsed = tv_interval($rstate->{starttime});
 
 	    my $rate = int($rstate->{bytes} / ($elapsed * 1024 * 1024));
