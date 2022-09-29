@@ -1253,8 +1253,7 @@ sub file_upload_multipart {
 	if ($rstate->{phase} == 100) { # Phase 100 - transfer finished
 	    $rstate->{md5sum} = $rstate->{ctx}->hexdigest;
 	    my $elapsed = tv_interval($rstate->{starttime});
-
-	    syslog('info', "multipart upload complete (size: %d time: %.1fs rate: %.2fMiB/s md5sum: %s)",
+	    syslog('info', "multipart upload complete (size: %dB time: %.3fs rate: %.2fMiB/s md5sum: %s)",
 		$rstate->{bytes}, $elapsed, $rstate->{bytes} / ($elapsed * 1024 * 1024), $rstate->{md5sum}
 	    );
 	    $self->handle_api2_request($reqstate, $auth, $method, $path, $rstate);
