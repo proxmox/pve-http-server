@@ -46,7 +46,7 @@ use URI;
 
 use PVE::INotify;
 use PVE::SafeSyslog;
-use PVE::Tools;
+use PVE::Tools qw(trim);
 
 use PVE::APIServer::Formatter;
 use PVE::APIServer::Utils;
@@ -1186,11 +1186,6 @@ my sub assert_form_disposition {
 sub file_upload_multipart {
     my ($self, $reqstate, $auth, $method, $path, $rstate) = @_;
 
-    my $trim = sub {
-	$_[0] =~ /\s*(\S+)/;
-	return $1;
-    };
-
     eval {
 	my $boundary = $rstate->{boundary};
 	my $hdl = $reqstate->{hdl};
@@ -1210,7 +1205,7 @@ sub file_upload_multipart {
 	    my ($name) = @_;
 	    if ($hdl->{rbuf} =~ s/^${delim_re}Content-Disposition: (.*?); name="$name"(.*?)($delim_re)/$3/s) {
 		assert_form_disposition($1);
-		$rstate->{params}->{$name} = $trim->($2);
+		$rstate->{params}->{$name} = trim($2);
 	    }
 	};
 
@@ -1228,7 +1223,7 @@ sub file_upload_multipart {
 		assert_form_disposition($1);
 		die "wrong field name '$2' for file upload, expected 'filename'" if $2 ne "filename";
 		$rstate->{phase} = 2;
-		$rstate->{params}->{filename} = $trim->($3);
+		$rstate->{params}->{filename} = trim($3);
 	    }
 	}
 
