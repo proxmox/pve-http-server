@@ -1280,26 +1280,6 @@ sub parse_content_type {
     return  wantarray ? ($ct) : $ct;
 }
 
-sub parse_content_disposition {
-    my ($line) = @_;
-
-    my ($disp, @params) = split(/\s*[;,]\s*/o, $line);
-    my $name;
-    my $filename;
-
-    foreach my $v (@params) {
-	if ($v =~ m/^\s*name\s*=\s*(\S+?)\s*$/o) {
-	    $name = $1;
-	    $name =~ s/^"(.*)"$/$1/;
-	} elsif ($v =~ m/^\s*filename\s*=\s*(.+?)\s*$/o) {
-	    $filename = $1;
-	    $filename =~ s/^"(.*)"$/$1/;
-	}
-    }
-
-    return  wantarray ? ($disp, $name, $filename) : $disp;
-}
-
 my $tmpfile_seq_no = 0;
 
 sub get_upload_filename {
