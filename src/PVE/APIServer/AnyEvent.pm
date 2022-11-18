@@ -1223,15 +1223,15 @@ sub file_upload_multipart {
 	    $extract_form_disposition->('checksum');
 
 	    if ($hdl->{rbuf} =~
-		s/^${delim_re}
-		Content-Disposition:\ (.*?);\ name="(.*?)";\ filename="([^"]+)"${newline_re}
-		Content-Type:\ \S*${newline_re}{2}
-		//sxx
+		s/^${delim_re}Content-Disposition:\ (.*?);\ name="(.*?)";\ filename="([^"]+)"${newline_re}//sxx
 	    ) {
 		assert_form_disposition($1);
 		die "wrong field name '$2' for file upload, expected 'filename'" if $2 ne "filename";
 		$rstate->{phase} = 2;
 		$rstate->{params}->{filename} = trim($3);
+
+		# remove any remaining multipart "headers" like Content-Type
+		$hdl->{rbuf} =~ s/^.*?${newline_re}{2}//s
 	    }
 	}
 
