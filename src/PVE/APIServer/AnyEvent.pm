@@ -1222,9 +1222,7 @@ sub file_upload_multipart {
 	    $extract_form_disposition->('checksum-algorithm');
 	    $extract_form_disposition->('checksum');
 
-	    if ($hdl->{rbuf} =~
-		s/^${delim_re}Content-Disposition:\ (.*?);\ name="(.*?)";\ filename="([^"]+)"${newline_re}//sxx
-	    ) {
+	    if ($hdl->{rbuf} =~ s/^${delim_re}Content-Disposition: (.*?); name="(.*?)"; filename="([^"]+)"${newline_re}//s) {
 		assert_form_disposition($1);
 		die "wrong field name '$2' for file upload, expected 'filename'" if $2 ne "filename";
 		$rstate->{phase} = 2;
