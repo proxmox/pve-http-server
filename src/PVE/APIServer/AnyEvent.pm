@@ -1217,7 +1217,7 @@ sub file_upload_multipart {
 	    if ($hdl->{rbuf} =~
 		s/^${delim_re}
 		Content-Disposition:\ (.*?);\ name="(.*?)";\ filename="([^"]+)"${newline_re}
-		Content-Type:\ \S*\s+
+		Content-Type:\ \S*${newline_re}{2}
 		//sxx
 	    ) {
 		assert_form_disposition($1);
