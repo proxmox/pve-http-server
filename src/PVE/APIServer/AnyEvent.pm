@@ -1201,11 +1201,19 @@ sub file_upload_multipart {
 	    $rstate->{phase} = 1;
 	}
 
+	my $remove_until_data = sub {
+	    my ($hdl) = @_;
+	    # remove any remaining multipart "headers" like Content-Type
+	    $hdl->{rbuf} =~ s/^.*?${newline_re}{2}//s;
+	};
+
 	my $extract_form_disposition = sub {
 	    my ($name) = @_;
-	    if ($hdl->{rbuf} =~ s/^${delim_re}Content-Disposition: (.*?); name="$name"(.*?)($delim_re)/$3/s) {
+	    if ($hdl->{rbuf} =~ s/^${delim_re}.*?Content-Disposition: (.*?); name="$name"(.*?${delim_re})/$2/s) {
 		assert_form_disposition($1);
-		$rstate->{params}->{$name} = trim($2);
+		$remove_until_data->($hdl);
+		$hdl->{rbuf} =~ s/^(.*?)(${delim_re})/$2/s;
+		$rstate->{params}->{$name} = trim($1);
 	    }
 	};
 
