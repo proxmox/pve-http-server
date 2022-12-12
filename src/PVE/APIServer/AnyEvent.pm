@@ -1193,7 +1193,7 @@ sub file_upload_multipart {
 
 	my $newline_re = qr/\015?\012/;
 	my $delim_re = qr/--\Q$boundary\E${newline_re}/;
-	my $close_delim_re = qr/--\Q$boundary\E--${newline_re}/;
+	my $close_delim_re = qr/--\Q$boundary\E--/;
 
 	# Phase 0 - preserve boundary, but remove everything before
 	if ($rstate->{phase} == 0 && $hdl->{rbuf} =~ s/^.*?($delim_re)/$1/s) {
