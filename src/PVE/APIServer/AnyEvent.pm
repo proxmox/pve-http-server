@@ -650,7 +650,7 @@ sub websocket_proxy {
 			    $proxyhdl->{block_disconnect} = 1 if length $proxyhdl->{wbuf};
 
 			    $proxyhdl->push_shutdown();
-		        }
+			}
 			$hdl->push_shutdown();
 		    } elsif ($opcode == 9) {
 			# ping received, schedule pong
@@ -961,7 +961,7 @@ sub handle_api2_request {
 
 	my $download = $res->{download};
 	$download //= $res->{data}->{download}
-            if defined($res->{data}) && ref($res->{data}) eq 'HASH';
+	    if defined($res->{data}) && ref($res->{data}) eq 'HASH';
 	if (defined($download)) {
 	    send_file_start($self, $reqstate, $download);
 	    return;
@@ -998,12 +998,12 @@ sub handle_spice_proxy_request {
 	my $clientip = $reqstate->{peer_host};
 	my $r = $reqstate->{request};
 
-        my $remip;
+	my $remip;
 
-        if ($node ne 'localhost' && PVE::INotify::nodename() !~ m/^$node$/i) {
-            $remip = $self->remote_node_ip($node);
+	if ($node ne 'localhost' && PVE::INotify::nodename() !~ m/^$node$/i) {
+	    $remip = $self->remote_node_ip($node);
 	    $self->dprint("REMOTE CONNECT $vmid, $remip, $connect_str");
-        } else {
+	} else {
 	    $self->dprint("CONNECT $vmid, $node, $spiceport");
 	}
 
@@ -1106,7 +1106,7 @@ sub handle_spice_proxy_request {
 			$reqstate->{hdl}->push_write($line);
 			$self->client_do_disconnect($reqstate);
 		    }
-                });
+		});
 	    } else {
 		&$startproxy();
 	    }
