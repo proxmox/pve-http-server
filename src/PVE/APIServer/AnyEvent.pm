@@ -1310,156 +1310,13 @@ sub unshift_read_header {
 	    my $r = $reqstate->{request};
 	    if ($line eq '') {
 
-		my $path = uri_unescape($r->uri->path());
-		my $method = $r->method();
-
 		$r->push_header($state->{key}, $state->{val})
 		    if $state->{key};
 
-		my $base_uri = $self->{base_uri};
-
-		my $len = $r->header('Content-Length');
-		my $host_header = $r->header('Host');
-
 		$self->process_header($reqstate) or return;
 		# header processing complete - authenticate now
+		$self->authenticate_and_handle_request($reqstate) or return;
 
-		my $auth = {};
-		if ($self->{spiceproxy}) {
-		    my $connect_str = $host_header;
-		    my ($vmid, $node, $port) = $self->verify_spice_connect_url($connect_str);
-		    if (!(defined($vmid) && $node && $port)) {
-			$self->error($reqstate, HTTP_UNAUTHORIZED, "invalid ticket");
-			return;
-		    }
-		    $self->handle_spice_proxy_request($reqstate, $connect_str, $vmid, $node, $port);
-		    return;
-		} elsif ($path =~ m/^\Q$base_uri\E/) {
-		    my $token = $r->header('CSRFPreventionToken');
-		    my $cookie = $r->header('Cookie');
-		    my $auth_header = $r->header('Authorization');
-
-		    # prefer actual cookie
-		    my $ticket = PVE::APIServer::Formatter::extract_auth_value($cookie, $self->{cookie_name});
-
-		    # fallback to cookie in 'Authorization' header
-		    $ticket = PVE::APIServer::Formatter::extract_auth_value($auth_header, $self->{cookie_name})
-			if !$ticket;
-
-		    # finally, fallback to API token if no ticket has been provided so far
-		    my $api_token;
-		    $api_token = PVE::APIServer::Formatter::extract_auth_value($auth_header, $self->{apitoken_name})
-			if !$ticket;
-
-		    my ($rel_uri, $format) = &$split_abs_uri($path, $self->{base_uri});
-		    if (!$format) {
-			$self->error($reqstate, HTTP_NOT_IMPLEMENTED, "no such uri");
-			return;
-		    }
-
-		    eval {
-			$auth = $self->auth_handler($method, $rel_uri, $ticket, $token, $api_token,
-						    $reqstate->{peer_host});
-		    };
-		    if (my $err = $@) {
-			# HACK: see Note 1
-			Net::SSLeay::ERR_clear_error();
-			# always delay unauthorized calls by 3 seconds
-			my $delay = 3;
-
-			if (ref($err) eq "PVE::Exception") {
-
-			    $err->{code} ||= HTTP_INTERNAL_SERVER_ERROR,
-			    my $resp = HTTP::Response->new($err->{code}, $err->{msg});
-			    $self->response($reqstate, $resp, undef, 0, $delay);
-
-			} elsif (my $formatter = PVE::APIServer::Formatter::get_login_formatter($format)) {
-			    my ($raw, $ct, $nocomp) =
-				$formatter->($path, $auth, $self->{formatter_config});
-			    my $resp;
-			    if (ref($raw) && (ref($raw) eq 'HTTP::Response')) {
-				$resp = $raw;
-			    } else {
-				$resp = HTTP::Response->new(HTTP_UNAUTHORIZED, "Login Required");
-				$resp->header("Content-Type" => $ct);
-				$resp->content($raw);
-			    }
-			    $self->response($reqstate, $resp, undef, $nocomp, $delay);
-			} else {
-			    my $resp = HTTP::Response->new(HTTP_UNAUTHORIZED, $err);
-			    $self->response($reqstate, $resp, undef, 0, $delay);
-			}
-			return;
-		    }
-		}
-
-		$reqstate->{log}->{userid} = $auth->{userid};
-
-		if ($len) {
-
-		    if (!($method eq 'PUT' || $method eq 'POST')) {
-			$self->error($reqstate, 501, "Unexpected content for method '$method'");
-			return;
-		    }
-
-		    my $ctype = $r->header('Content-Type');
-		    my ($ct, $boundary) = $ctype ? parse_content_type($ctype) : ();
-
-		    if ($auth->{isUpload} && !$self->{trusted_env}) {
-			die "upload 'Content-Type '$ctype' not implemented\n"
-			    if !($boundary && $ct && ($ct eq 'multipart/form-data'));
-
-			die "upload without content length header not supported" if !$len;
-
-			die "upload without content length header not supported" if !$len;
-
-			$self->dprint("start upload $path $ct $boundary");
-
-			my $tmpfilename = get_upload_filename();
-			my $outfh = IO::File->new($tmpfilename, O_RDWR|O_CREAT|O_EXCL, 0600) ||
-			    die "unable to create temporary upload file '$tmpfilename'";
-
-			$reqstate->{keep_alive} = 0;
-
-			my $boundlen = length($boundary) + 8; # \015?\012--$boundary--\015?\012
-
-			my $state = {
-			    size => $len,
-			    boundary => $boundary,
-			    ctx => Digest::MD5->new,
-			    boundlen =>  $boundlen,
-			    maxheader => 2048 + $boundlen, # should be large enough
-			    params => decode_urlencoded($r->url->query()),
-			    phase => 0,
-			    read => 0,
-			    post_size => 0,
-			    starttime => [gettimeofday],
-			    outfh => $outfh,
-			};
-			$reqstate->{tmpfilename} = $tmpfilename;
-			$reqstate->{hdl}->on_read(sub {
-			    $self->file_upload_multipart($reqstate, $auth, $method, $path, $state);
-			});
-			return;
-		    }
-
-		    if ($len > $limit_max_post) {
-			$self->error($reqstate, 501, "for data too large");
-			return;
-		    }
-
-		    if (!$ct || $ct eq 'application/x-www-form-urlencoded' || $ct eq 'application/json') {
-			$reqstate->{hdl}->unshift_read(chunk => $len, sub {
-			    my ($hdl, $data) = @_;
-			    $r->content($data);
-			    $self->handle_request($reqstate, $auth, $method, $path);
-		        });
-		    } else {
-			$self->error($reqstate, 506, "upload 'Content-Type '$ctype' not implemented");
-		    }
-		} else {
-		    $self->handle_request($reqstate, $auth, $method, $path);
-		}
 	    } elsif ($line =~ /^([^:\s]+)\s*:\s*(.*)/) {
 		$r->push_header($state->{key}, $state->{val}) if $state->{key};
 		($state->{key}, $state->{val}) = ($1, $2);
@@ -1522,6 +1379,185 @@ sub process_header {
 
     if (my $rpcenv = $self->{rpcenv}) {
 	$rpcenv->set_request_host($request->header('Host'));
+    }
+
+    return 1;
+}
+
+sub authenticate_and_handle_request {
+    my ($self, $reqstate) = @_;
+
+    my $request = $reqstate->{request};
+    my $method = $request->method();
+
+    my $path = uri_unescape($request->uri->path());
+    my $base_uri = $self->{base_uri};
+
+    my $auth = {};
+
+    if ($self->{spiceproxy}) {
+	my $connect_str = $request->header('Host');
+	my ($vmid, $node, $port) = $self->verify_spice_connect_url($connect_str);
+
+	if (!(defined($vmid) && $node && $port)) {
+	    $self->error($reqstate, HTTP_UNAUTHORIZED, "invalid ticket");
+	    return;
+	}
+
+	$self->handle_spice_proxy_request($reqstate, $connect_str, $vmid, $node, $port);
+	return;
+
+    } elsif ($path =~ m/^\Q$base_uri\E/) {
+	my $token = $request->header('CSRFPreventionToken');
+	my $cookie = $request->header('Cookie');
+	my $auth_header = $request->header('Authorization');
+
+	# prefer actual cookie
+	my $ticket = PVE::APIServer::Formatter::extract_auth_value(
+	    $cookie,
+	    $self->{cookie_name}
+	);
+
+	# fallback to cookie in 'Authorization' header
+	if (!$ticket) {
+	    $ticket = PVE::APIServer::Formatter::extract_auth_value(
+		$auth_header,
+		$self->{cookie_name}
+	    );
+	}
+
+	# finally, fallback to API token if no ticket has been provided so far
+	my $api_token;
+	if (!$ticket) {
+	    $api_token = PVE::APIServer::Formatter::extract_auth_value(
+		$auth_header,
+		$self->{apitoken_name}
+	    );
+	}
+
+	my ($rel_uri, $format) = &$split_abs_uri($path, $self->{base_uri});
+	if (!$format) {
+	    $self->error($reqstate, HTTP_NOT_IMPLEMENTED, "no such uri");
+	    return;
+	}
+
+	eval {
+	    $auth = $self->auth_handler(
+		$method,
+		$rel_uri,
+		$ticket,
+		$token,
+		$api_token,
+		$reqstate->{peer_host}
+	    );
+	};
+	if (my $err = $@) {
+	    # HACK: see Note 1
+	    Net::SSLeay::ERR_clear_error();
+	    # always delay unauthorized calls by 3 seconds
+	    my $delay = 3;
+
+	    if (ref($err) eq "PVE::Exception") {
+
+		$err->{code} ||= HTTP_INTERNAL_SERVER_ERROR,
+		my $resp = HTTP::Response->new($err->{code}, $err->{msg});
+		$self->response($reqstate, $resp, undef, 0, $delay);
+
+	    } elsif (my $formatter = PVE::APIServer::Formatter::get_login_formatter($format)) {
+		my ($raw, $ct, $nocomp) =
+		    $formatter->($path, $auth, $self->{formatter_config});
+
+		my $resp;
+		if (ref($raw) && (ref($raw) eq 'HTTP::Response')) {
+		    $resp = $raw;
+
+		} else {
+		    $resp = HTTP::Response->new(HTTP_UNAUTHORIZED, "Login Required");
+		    $resp->header("Content-Type" => $ct);
+		    $resp->content($raw);
+		}
+
+		$self->response($reqstate, $resp, undef, $nocomp, $delay);
+
+	    } else {
+		my $resp = HTTP::Response->new(HTTP_UNAUTHORIZED, $err);
+		$self->response($reqstate, $resp, undef, 0, $delay);
+	    }
+
+	    return;
+	}
+    }
+
+    $reqstate->{log}->{userid} = $auth->{userid};
+    my $len = $request->header('Content-Length');
+
+    if ($len) {
+
+	if (!($method eq 'PUT' || $method eq 'POST')) {
+	    $self->error($reqstate, 501, "Unexpected content for method '$method'");
+	    return;
+	}
+
+	my $ctype = $request->header('Content-Type');
+	my ($ct, $boundary) = $ctype ? parse_content_type($ctype) : ();
+
+	if ($auth->{isUpload} && !$self->{trusted_env}) {
+	    die "upload 'Content-Type '$ctype' not implemented\n"
+		if !($boundary && $ct && ($ct eq 'multipart/form-data'));
+
+	    die "upload without content length header not supported" if !$len;
+
+	    die "upload without content length header not supported" if !$len;
+
+	    $self->dprint("start upload $path $ct $boundary");
+
+	    my $tmpfilename = get_upload_filename();
+	    my $outfh = IO::File->new($tmpfilename, O_RDWR|O_CREAT|O_EXCL, 0600) ||
+		die "unable to create temporary upload file '$tmpfilename'";
+
+	    $reqstate->{keep_alive} = 0;
+
+	    my $boundlen = length($boundary) + 8; # \015?\012--$boundary--\015?\012
+
+	    my $state = {
+		size => $len,
+		boundary => $boundary,
+		ctx => Digest::MD5->new,
+		boundlen =>  $boundlen,
+		maxheader => 2048 + $boundlen, # should be large enough
+		params => decode_urlencoded($request->url->query()),
+		phase => 0,
+		read => 0,
+		post_size => 0,
+		starttime => [gettimeofday],
+		outfh => $outfh,
+	    };
+	    $reqstate->{tmpfilename} = $tmpfilename;
+	    $reqstate->{hdl}->on_read(sub {
+		$self->file_upload_multipart($reqstate, $auth, $method, $path, $state);
+	    });
+
+	    return;
+	}
+
+	if ($len > $limit_max_post) {
+	    $self->error($reqstate, 501, "for data too large");
+	    return;
+	}
+
+	if (!$ct || $ct eq 'application/x-www-form-urlencoded' || $ct eq 'application/json') {
+	    $reqstate->{hdl}->unshift_read(chunk => $len, sub {
+		my ($hdl, $data) = @_;
+		$request->content($data);
+		$self->handle_request($reqstate, $auth, $method, $path);
+	    });
+
+	} else {
+	    $self->error($reqstate, 506, "upload 'Content-Type '$ctype' not implemented");
+	}
+
+    } else {
+	$self->handle_request($reqstate, $auth, $method, $path);
     }
 
     return 1;
