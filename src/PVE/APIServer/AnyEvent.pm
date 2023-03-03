@@ -1314,7 +1314,7 @@ sub unshift_read_header {
 		    if $state->{key};
 
 		$self->process_header($reqstate) or return;
-		# header processing complete - authenticate now
+		$self->ensure_tls_connection($reqstate) or return;
 		$self->authenticate_and_handle_request($reqstate) or return;
 
 	    } elsif ($line =~ /^([^:\s]+)\s*:\s*(.*)/) {
@@ -1382,6 +1382,43 @@ sub process_header {
     }
 
     return 1;
+}
+
+sub ensure_tls_connection {
+    my ($self, $reqstate) = @_;
+
+    # Skip if server doesn't use TLS
+    if (!$self->{tls_ctx}) {
+	return 1;
+    }
+
+    # TLS session exists, so the handshake has succeeded
+    if ($reqstate->{hdl}->{tls}) {
+	return 1;
+    }
+
+    my $request = $reqstate->{request};
+    my $method = $request->method();
+
+    my $h_host = $reqstate->{request}->header('Host');
+
+    die "Header field 'Host' not found in request\n"
+	if !$h_host;
+
+    my $secure_host = "https://" . ($h_host =~ s/^http(s)?:\/\///r);
+
+    my $header = HTTP::Headers->new('Location' => $secure_host . $request->uri());
+
+    if ($method eq 'GET' || $method eq 'HEAD') {
+	$self->error($reqstate, 301, 'Moved Permanently', $header);
+    } else {
+	$self->error($reqstate, 308, 'Permanent Redirect', $header);
+    }
+
+    # disconnect the client so they may immediately connect again via HTTPS
+    $self->client_do_disconnect($reqstate);
+
+    return;
 }
 
 sub authenticate_and_handle_request {
@@ -1791,10 +1828,15 @@ sub accept_connections {
 		    };
 		    if (my $err = $@) { syslog('err', "$err"); }
 		},
-		($self->{tls_ctx} ? (tls => "accept", tls_ctx => $self->{tls_ctx}) : ()));
+	    );
 	    $handle_creation = 0;
 
 	    $self->dprint("ACCEPT FH" .  $clientfh->fileno() . " CONN$self->{conn_count}");
+
+	    if ($self->{tls_ctx}) {
+		$self->dprint("Setting TLS to autostart");
+		$reqstate->{hdl}->unshift_read(tls_autostart => $self->{tls_ctx}, "accept");
+	    }
 
 	    $self->push_request_header($reqstate);
 	}
