@@ -1316,51 +1316,12 @@ sub unshift_read_header {
 		$r->push_header($state->{key}, $state->{val})
 		    if $state->{key};
 
-		if (!$known_methods->{$method}) {
-		    my $resp = HTTP::Response->new(HTTP_NOT_IMPLEMENTED, "method '$method' not available");
-		    $self->response($reqstate, $resp);
-		    return;
-		}
-
-		my $conn = $r->header('Connection');
-		my $accept_enc = $r->header('Accept-Encoding');
-		$reqstate->{accept_gzip} = ($accept_enc && $accept_enc =~ m/gzip/) ? 1 : 0;
-
-		if ($conn) {
-		    $reqstate->{keep_alive} = 0 if $conn =~ m/close/oi;
-		} else {
-		    if ($reqstate->{proto}->{ver} < 1001) {
-			$reqstate->{keep_alive} = 0;
-		    }
-		}
-
-		my $te  = $r->header('Transfer-Encoding');
-		if ($te && lc($te) eq 'chunked') {
-		    # Handle chunked transfer encoding
-		    $self->error($reqstate, 501, "chunked transfer encoding not supported");
-		    return;
-		} elsif ($te) {
-		    $self->error($reqstate, 501, "Unknown transfer encoding '$te'");
-		    return;
-		}
-
-		my $pveclientip = $r->header('PVEClientIP');
 		my $base_uri = $self->{base_uri};
 
-		# fixme: how can we make PVEClientIP header trusted?
-		if ($self->{trusted_env} && $pveclientip) {
-		    $reqstate->{peer_host} = $pveclientip;
-		} else {
-		    $r->header('PVEClientIP', $reqstate->{peer_host});
-		}
-
 		my $len = $r->header('Content-Length');
-
 		my $host_header = $r->header('Host');
-		if (my $rpcenv = $self->{rpcenv}) {
-		    $rpcenv->set_request_host($host_header);
-		}
 
+		$self->process_header($reqstate) or return;
 		# header processing complete - authenticate now
 
 		my $auth = {};
@@ -1513,6 +1474,58 @@ sub unshift_read_header {
 	warn $@ if $@;
     });
 };
+
+sub process_header {
+    my ($self, $reqstate) = @_;
+
+    my $request = $reqstate->{request};
+
+    my $path = uri_unescape($request->uri->path());
+    my $method = $request->method();
+
+    if (!$known_methods->{$method}) {
+	my $resp = HTTP::Response->new(HTTP_NOT_IMPLEMENTED, "method '$method' not available");
+	$self->response($reqstate, $resp);
+	return;
+    }
+
+    my $conn = $request->header('Connection');
+    my $accept_enc = $request->header('Accept-Encoding');
+    $reqstate->{accept_gzip} = ($accept_enc && $accept_enc =~ m/gzip/) ? 1 : 0;
+
+    if ($conn) {
+	$reqstate->{keep_alive} = 0 if $conn =~ m/close/oi;
+    } else {
+	if ($reqstate->{proto}->{ver} < 1001) {
+	    $reqstate->{keep_alive} = 0;
+	}
+    }
+
+    my $te  = $request->header('Transfer-Encoding');
+    if ($te && lc($te) eq 'chunked') {
+	# Handle chunked transfer encoding
+	$self->error($reqstate, 501, "chunked transfer encoding not supported");
+	return;
+    } elsif ($te) {
+	$self->error($reqstate, 501, "Unknown transfer encoding '$te'");
+	return;
+    }
+
+    my $pveclientip = $request->header('PVEClientIP');
+
+    # fixme: how can we make PVEClientIP header trusted?
+    if ($self->{trusted_env} && $pveclientip) {
+	$reqstate->{peer_host} = $pveclientip;
+    } else {
+	$request->header('PVEClientIP', $reqstate->{peer_host});
+    }
+
+    if (my $rpcenv = $self->{rpcenv}) {
+	$rpcenv->set_request_host($request->header('Host'));
+    }
+
+    return 1;
+}
 
 sub push_request_header {
     my ($self, $reqstate) = @_;
