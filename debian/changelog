@@ -1,3 +1,17 @@
+libpve-http-server-perl (4.1-6) bullseye; urgency=medium
+
+  * multipart upload: fix upload of files starting with newlines
+
+  * multipart upload: don't fail on presebce of additional headers
+
+  * multipart upload: loosen trailing-newline requirement from spec, as some
+    more popular clients (e.g., postman) violate that rule.
+
+  * fix #4344: http-server: fix regression that required the 'Content-Type' to
+    be always present for multipart headers, while it wasn't used at all.
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 06 Mar 2023 13:39:57 +0100
+
 libpve-http-server-perl (4.1-5) bullseye; urgency=medium
 
   * upload: re-allow having white-space in filenames
