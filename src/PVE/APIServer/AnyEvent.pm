@@ -1227,9 +1227,7 @@ sub file_upload_multipart {
 		die "wrong field name '$2' for file upload, expected 'filename'" if $2 ne "filename";
 		$rstate->{phase} = 2;
 		$rstate->{params}->{filename} = trim($3);
-
-		# remove any remaining multipart "headers" like Content-Type
-		$hdl->{rbuf} =~ s/^.*?${newline_re}{2}//s
+		$remove_until_data->($hdl); # any remaining multipart "headers" like Content-Type
 	    }
 	}
 
