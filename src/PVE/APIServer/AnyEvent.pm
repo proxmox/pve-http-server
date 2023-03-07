@@ -1333,6 +1333,7 @@ sub unshift_read_header {
     });
 };
 
+# sends an (error) response and returns 0 in case of errors
 sub process_header {
     my ($self, $reqstate) = @_;
 
@@ -1385,6 +1386,8 @@ sub process_header {
     return 1;
 }
 
+# sends an (redirect) response, disconnects the client and returns 0 if
+# connection is not TLS-protected
 sub ensure_tls_connection {
     my ($self, $reqstate) = @_;
 
