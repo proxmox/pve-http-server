@@ -1313,9 +1313,10 @@ sub unshift_read_header {
 		$r->push_header($state->{key}, $state->{val})
 		    if $state->{key};
 
-		$self->process_header($reqstate) or return;
-		$self->ensure_tls_connection($reqstate) or return;
-		$self->authenticate_and_handle_request($reqstate) or return;
+		return if !$self->process_header($reqstate);
+		return if !$self->ensure_tls_connection($reqstate);
+
+		$self->authenticate_and_handle_request($reqstate);
 
 	    } elsif ($line =~ /^([^:\s]+)\s*:\s*(.*)/) {
 		$r->push_header($state->{key}, $state->{val}) if $state->{key};
@@ -1596,8 +1597,6 @@ sub authenticate_and_handle_request {
     } else {
 	$self->handle_request($reqstate, $auth, $method, $path);
     }
-
-    return 1;
 }
 
 sub push_request_header {
