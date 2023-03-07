@@ -1344,7 +1344,7 @@ sub process_header {
     if (!$known_methods->{$method}) {
 	my $resp = HTTP::Response->new(HTTP_NOT_IMPLEMENTED, "method '$method' not available");
 	$self->response($reqstate, $resp);
-	return;
+	return 0;
     }
 
     my $conn = $request->header('Connection');
@@ -1363,10 +1363,10 @@ sub process_header {
     if ($te && lc($te) eq 'chunked') {
 	# Handle chunked transfer encoding
 	$self->error($reqstate, 501, "chunked transfer encoding not supported");
-	return;
+	return 0;
     } elsif ($te) {
 	$self->error($reqstate, 501, "Unknown transfer encoding '$te'");
-	return;
+	return 0;
     }
 
     my $pveclientip = $request->header('PVEClientIP');
@@ -1419,7 +1419,7 @@ sub ensure_tls_connection {
     # disconnect the client so they may immediately connect again via HTTPS
     $self->client_do_disconnect($reqstate);
 
-    return;
+    return 0;
 }
 
 sub authenticate_and_handle_request {
