@@ -88,7 +88,7 @@ sub body {
     $jssetup .= "PVE.delete_auth_cookie = function() {\n";
 
     if ($self->{cookie_name}) {
-	$jssetup .= "  document.cookie = \"$self->{cookie_name}=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=/; secure;\";\n";
+	$jssetup .= "  document.cookie = \"$self->{cookie_name}=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=/; secure; SameSite=Strict;\";\n";
     };
     $jssetup .= "};\n";
 
