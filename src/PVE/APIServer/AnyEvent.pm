@@ -1245,15 +1245,14 @@ sub file_upload_multipart {
 	    if ($write_length > 0) {
 		syswrite($rstate->{outfh}, $data) == $write_length or die "write to temporary file failed - $!\n";
 		$rstate->{bytes} += $write_length;
-		$rstate->{ctx}->add($data);
 	    }
 	}
 
 	if ($rstate->{phase} == 100) { # Phase 100 - transfer finished
-	    $rstate->{md5sum} = $rstate->{ctx}->hexdigest;
 	    my $elapsed = tv_interval($rstate->{starttime});
-	    syslog('info', "multipart upload complete (size: %dB time: %.3fs rate: %.2fMiB/s md5sum: %s)",
-		$rstate->{bytes}, $elapsed, $rstate->{bytes} / ($elapsed * 1024 * 1024), $rstate->{md5sum}
+	    syslog('info', "multipart upload complete (size: %dB time: %.3fs rate: %.2fMiB/s filename: %s)",
+		$rstate->{bytes}, $elapsed, $rstate->{bytes} / ($elapsed * 1024 * 1024),
+		$rstate->{params}->{filename}
 	    );
 	    $self->handle_api2_request($reqstate, $auth, $method, $path, $rstate);
 	}
@@ -1563,7 +1562,6 @@ sub authenticate_and_handle_request {
 	    my $state = {
 		size => $len,
 		boundary => $boundary,
-		ctx => Digest::MD5->new,
 		boundlen =>  $boundlen,
 		maxheader => 2048 + $boundlen, # should be large enough
 		params => decode_urlencoded($request->url->query()),
