@@ -1640,7 +1640,7 @@ sub push_request_header {
 		    $reqstate->{proto}->{min} = $min;
 		    $reqstate->{proto}->{ver} = $maj*1000+$min;
 		    $reqstate->{request} = HTTP::Request->new($method, $url);
-		    $reqstate->{starttime} = [gettimeofday],
+		    $reqstate->{starttime} = [gettimeofday];
 
 		    $self->unshift_read_header($reqstate);
 		} elsif ($line eq '') {
