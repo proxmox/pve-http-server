@@ -1571,6 +1571,10 @@ sub authenticate_and_handle_request {
 		starttime => [gettimeofday],
 		outfh => $outfh,
 	    };
+
+	    die "'tmpfilename' query parameter is not allowed for file uploads\n"
+		if exists $state->{params}->{tmpfilename};
+
 	    $reqstate->{tmpfilename} = $tmpfilename;
 	    $reqstate->{hdl}->on_read(sub {
 		$self->file_upload_multipart($reqstate, $auth, $method, $path, $state);
