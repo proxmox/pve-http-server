@@ -2,9 +2,10 @@ package PVE::APIServer::Formatter::Bootstrap;
 
 use strict;
 use warnings;
-use URI::Escape;
+
 use HTML::Entities;
 use JSON;
+use URI::Escape;
 
 # FIXME: remove console code??
 
@@ -67,7 +68,7 @@ sub new {
 	cookie_name => $config->{cookie_name},
 	apitoken_name => $config->{apitoken_name},
 	js => '',
-    };
+    }, $class;
 
     if (my $username = $auth->{userid}) {
 	$self->{csrftoken} = $config->{csrfgen_func}->($username);
