@@ -2,7 +2,7 @@ Source: libpve-http-server-perl
 Section: perl
 Priority: optional
 Maintainer: Proxmox Support Team <support@proxmox.com>
-Build-Depends: debhelper (>= 12), perl
+Build-Depends: debhelper-compat (= 13), perl
 Standards-Version: 4.5.1
 Homepage: https://www.proxmox.com
 
