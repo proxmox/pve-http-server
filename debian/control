@@ -2,7 +2,7 @@ Source: libpve-http-server-perl
 Section: perl
 Priority: optional
 Maintainer: Proxmox Support Team <support@proxmox.com>
-Build-Depends: debhelper-compat (= 13), perl
+Build-Depends: debhelper-compat (= 13), perl,
 Standards-Version: 4.6.2
 Homepage: https://www.proxmox.com
 
@@ -21,6 +21,7 @@ Depends: libanyevent-http-perl,
          libnet-ip-perl,
          libpve-common-perl (>= 6.0-13),
          liburi-perl,
+         ${misc:Depends},
          ${perl:Depends},
 Breaks: libpve-storage-perl (<< 7.0-11),
         pmg-api (<< 6.1-5),
