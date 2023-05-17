@@ -3,7 +3,7 @@ Section: perl
 Priority: optional
 Maintainer: Proxmox Support Team <support@proxmox.com>
 Build-Depends: debhelper-compat (= 13), perl
-Standards-Version: 4.5.1
+Standards-Version: 4.6.2
 Homepage: https://www.proxmox.com
 
 Package: libpve-http-server-perl
