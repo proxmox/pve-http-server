@@ -1,3 +1,13 @@
+libpve-http-server-perl (5.0.0) bookworm; urgency=medium
+
+  * switch over to native versioning
+
+  * various small code and packaging clean ups
+
+  * re-build for Debian 12 Bookworm based releases
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 17 May 2023 07:26:11 +0200
+
 libpve-http-server-perl (4.2-3) bullseye; urgency=medium
 
   * file upload: don't always calculate MD5 for syslog message, rather log the
