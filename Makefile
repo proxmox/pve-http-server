@@ -43,7 +43,7 @@ distclean: clean
 
 clean:
 	$(MAKE) -C src $@
-	rm -rf $(PACKAGE)-*/ *.deb *.dsc *.tar.* *.changes *.buildinfo examples/simple-demo.lck
+	rm -rf $(PACKAGE)-*/ *.deb *.dsc *.tar.* *.changes *.build *.buildinfo examples/simple-demo.lck
 
 .PHONY: dinstall
 dinstall: $(DEB)
