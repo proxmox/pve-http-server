@@ -3,21 +3,31 @@ include /usr/share/dpkg/pkg-info.mk
 PACKAGE=libpve-http-server-perl
 
 GITVERSION:=$(shell git rev-parse HEAD)
-BUILDDIR ?= $(PACKAGE)-$(DEB_VERSION_UPSTREAM)
+BUILDDIR ?= $(PACKAGE)-$(DEB_VERSION)
 
-DEB=$(PACKAGE)_$(DEB_VERSION_UPSTREAM_REVISION)_all.deb
+DSC=$(PACKAGE)_$(DEB_VERSION).dsc
+DEB=$(PACKAGE)_$(DEB_VERSION)_all.deb
 
 all:
 
+$(BUILDDIR): src debian
+	rm -rf $@ $@.tmp
+	cp -a src $@.tmp
+	cp -a debian $@.tmp/
+	echo "git clone git://git.proxmox.com/git/pve-http-server\\ngit checkout $(GITVERSION)" > $@.tmp/debian/SOURCE
+	mv $@.tmp $@
+
 .PHONY: deb
 deb: $(DEB)
-$(DEB):
-	rm -rf $(BUILDDIR)
-	cp -a src $(BUILDDIR)
-	cp -a debian $(BUILDDIR)/
-	echo "git clone git://git.proxmox.com/git/pve-http-server\\ngit checkout $(GITVERSION)" > $(BUILDDIR)/debian/SOURCE
+$(DEB): $(BUILDDIR)
 	cd $(BUILDDIR); dpkg-buildpackage -b -us -uc
 	lintian $(DEB)
+
+.PHONY: dsc
+dsc: $(DSC)
+$(DSC): $(BUILDDIR)
+	cd $(BUILDDIR); dpkg-buildpackage -S -us -uc
+	lintian $(DSC)
 
 .PHONY: upload
 upload: $(DEB)
@@ -29,7 +39,7 @@ distclean: clean
 
 clean:
 	$(MAKE) -C src $@
-	rm -rf $(PACKAGE)-*/ *.deb *.changes *.buildinfo $(BTDIR) examples/simple-demo.lck
+	rm -rf $(PACKAGE)-*/ *.deb *.dsc *.tar.* *.changes *.buildinfo examples/simple-demo.lck
 
 .PHONY: dinstall
 dinstall: $(DEB)
