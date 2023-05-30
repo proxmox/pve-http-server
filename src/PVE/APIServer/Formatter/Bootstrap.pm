@@ -167,7 +167,7 @@ sub el {
 
     foreach my $attr (keys %param)  {
 	next if $skip->{$attr};
-	my $v = $noescape->{$attr} ? $param{$attr} : uri_escape_utf8($param{$attr},"[^\/\ A-Za-z0-9\-\._~]");
+	my $v = $noescape->{$attr} ? $param{$attr} : uri_escape_utf8($param{$attr}, "^\/\ A-Za-z0-9\-\._~");
 	next if !defined($v);
 	if ($boolattr->{$attr}) {
 	    $html .= " $attr" if $v;
