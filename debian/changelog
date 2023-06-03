@@ -1,3 +1,11 @@
+libpve-http-server-perl (5.0.1) bookworm; urgency=medium
+
+  * fix regression in the html (bootstrap) based API debug explorer, which
+    came in through a more strict pattern checking in a newer version of the
+    used URL encoding library
+
+ -- Proxmox Support Team <support@proxmox.com>  Sat, 03 Jun 2023 15:15:47 +0200
+
 libpve-http-server-perl (5.0.0) bookworm; urgency=medium
 
   * switch over to native versioning
