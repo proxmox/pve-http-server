@@ -933,8 +933,8 @@ sub handle_api2_request {
 
 	    $res->{proxy_params}->{tmpfilename} = $reqstate->{tmpfilename} if $upload_state;
 
-	    $self->proxy_request($reqstate, $clientip, $host, $res->{proxynode}, $method,
-				 $r->uri, $auth, $res->{proxy_params});
+	    $self->proxy_request(
+		$reqstate, $clientip, $host, $res->{proxynode}, $method, $r->uri, $auth, $res->{proxy_params});
 	    return;
 
 	} elsif ($upgrade && ($method eq 'GET') && ($path =~ m|websocket$|)) {
