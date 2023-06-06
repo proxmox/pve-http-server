@@ -745,11 +745,16 @@ sub proxy_request {
 	my $content;
 
 	if  ($method eq 'POST' || $method eq 'PUT') {
-	    $headers->{'Content-Type'} = 'application/x-www-form-urlencoded';
-	    # use URI object to format application/x-www-form-urlencoded content.
-	    my $url = URI->new('http:');
-	    $url->query_form(%$params);
-	    $content = $url->query;
+	    if ($reqstate->{request}->header('Content-Type') =~ 'application/json') {
+		$headers->{'Content-Type'} = 'application/json';
+		$content = encode_json($params);
+	    } else {
+		$headers->{'Content-Type'} = 'application/x-www-form-urlencoded';
+		# use URI object to format application/x-www-form-urlencoded content.
+		my $url = URI->new('http:');
+		$url->query_form(%$params);
+		$content = $url->query;
+	    }
 	    if (defined($content)) {
 		$headers->{'Content-Length'} = length($content);
 	    }
