@@ -850,7 +850,12 @@ sub decode_urlencoded {
 	    $v = Encode::decode('utf8', $v);
 
 	    if (defined(my $old = $res->{$k})) {
-		$v = "$old\0$v";
+		if (ref($old) eq 'ARRAY') {
+		    push @$old, $v;
+		    $v = $old;
+		} else {
+		    $v = [$old, $v];
+		}
 	    }
 	}
 
