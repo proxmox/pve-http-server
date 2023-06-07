@@ -1,3 +1,15 @@
+libpve-http-server-perl (5.0.2) bookworm; urgency=medium
+
+  * formatter/bootstrap: set SameSite attr of auth cookie to 'strict'
+
+  * when proxying requests, preserve json formatting instead of converting to
+    x-www-form-urlencoded
+
+  * support actual arrays for array parameters, as a replacement for '-list' and
+    '-alist' formats
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 07 Jun 2023 13:21:19 +0200
+
 libpve-http-server-perl (5.0.1) bookworm; urgency=medium
 
   * fix regression in the html (bootstrap) based API debug explorer, which
