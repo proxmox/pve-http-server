@@ -1,3 +1,9 @@
+libpve-http-server-perl (5.0.3) bookworm; urgency=medium
+
+  * proxy request: handle missing content-type header
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 09 Jun 2023 18:58:05 +0200
+
 libpve-http-server-perl (5.0.2) bookworm; urgency=medium
 
   * formatter/bootstrap: set SameSite attr of auth cookie to 'strict'
