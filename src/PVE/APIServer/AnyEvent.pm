@@ -745,7 +745,8 @@ sub proxy_request {
 	my $content;
 
 	if  ($method eq 'POST' || $method eq 'PUT') {
-	    if ($reqstate->{request}->header('Content-Type') =~ 'application/json') {
+	    my $request_ct = $reqstate->{request}->header('Content-Type');
+	    if (defined($request_ct) && $request_ct =~ 'application/json') {
 		$headers->{'Content-Type'} = 'application/json';
 		$content = encode_json($params);
 	    } else {
