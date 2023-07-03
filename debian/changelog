@@ -1,3 +1,14 @@
+libpve-http-server-perl (5.0.4) bookworm; urgency=medium
+
+  * fix #4802: reduce CA lookups while proxying with OpenSSL as packaged in
+    Debian 12 Bookworm.
+
+  * avoid AnyEvent::AIO to fix CPU spinning if the pure-perl implementation
+    libanyevent-aio-perl is installed, for example on development machines
+    when trying to use the perl language server.
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 03 Jul 2023 09:38:56 +0200
+
 libpve-http-server-perl (5.0.3) bookworm; urgency=medium
 
   * proxy request: handle missing content-type header
