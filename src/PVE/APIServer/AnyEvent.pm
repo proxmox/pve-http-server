@@ -766,6 +766,7 @@ sub proxy_request {
 	    sslv2 => 0,
 	    sslv3 => 0,
 	    verify => 1,
+	    ca_path => '/usr/lib/ssl/certs', # to avoid loading the combined CA cert file
 	    verify_cb => sub {
 		my (undef, undef, undef, $depth, undef, undef, $cert) = @_;
 		# we don't care about intermediate or root certificates
