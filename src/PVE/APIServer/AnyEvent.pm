@@ -12,7 +12,6 @@ use warnings;
 
 use AnyEvent::HTTP;
 use AnyEvent::Handle;
-use AnyEvent::IO;
 use AnyEvent::Socket;
 # use AnyEvent::Strict; # only use this for debugging
 use AnyEvent::TLS;
