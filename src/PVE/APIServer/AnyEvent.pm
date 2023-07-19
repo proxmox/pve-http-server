@@ -2012,6 +2012,23 @@ sub new {
 	    warn "Failed to set TLS 1.3 ciphersuites '$ciphersuites'\n"
 		if !Net::SSLeay::CTX_set_ciphersuites($self->{tls_ctx}->{ctx}, $ciphersuites);
 	}
+
+	my $opts = Net::SSLeay::CTX_get_options($self->{tls_ctx}->{ctx});
+	my $min_version = Net::SSLeay::TLS1_1_VERSION();
+	my $max_version = Net::SSLeay::TLS1_3_VERSION();
+	if ($opts & &Net::SSLeay::OP_NO_TLSv1_1) {
+	    $min_version = Net::SSLeay::TLS1_2_VERSION();
+	}
+	if ($opts & &Net::SSLeay::OP_NO_TLSv1_2) {
+	    $min_version = Net::SSLeay::TLS1_3_VERSION();
+	}
+	if ($opts & &Net::SSLeay::OP_NO_TLSv1_3) {
+	    die "misconfigured TLS settings - cannot disable all supported TLS versions!\n"
+		if $min_version && $min_version == Net::SSLeay::TLS1_3_VERSION();
+	    $max_version = Net::SSLeay::TLS1_2_VERSION();
+	}
+	Net::SSLeay::CTX_set_min_proto_version($self->{tls_ctx}->{ctx}, $min_version) if $min_version;
+	Net::SSLeay::CTX_set_max_proto_version($self->{tls_ctx}->{ctx}, $max_version);
     }
 
     if ($self->{spiceproxy}) {
