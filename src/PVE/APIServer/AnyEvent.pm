@@ -1761,7 +1761,7 @@ sub check_host_access {
 	foreach my $t (@{$self->{allow_from}}) {
 	    if ($t->overlaps($cip)) {
 		$match_allow = 1;
-		$self->dprint("client IP allowed: ". $t->prefix());
+		$self->dprint("client IP allowed: ". $t->print());
 		last;
 	    }
 	}
@@ -1770,7 +1770,7 @@ sub check_host_access {
     if ($self->{deny_from}) {
 	foreach my $t (@{$self->{deny_from}}) {
 	    if ($t->overlaps($cip)) {
-		$self->dprint("client IP denied: ". $t->prefix());
+		$self->dprint("client IP denied: ". $t->print());
 		$match_deny = 1;
 		last;
 	    }
