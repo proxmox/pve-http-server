@@ -1,3 +1,10 @@
+libpve-http-server-perl (5.0.6) bookworm; urgency=medium
+
+  * access control: avoid "uninitialized value" warning if using IP
+    ranges
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 26 Mar 2024 09:16:48 +0100
+
 libpve-http-server-perl (5.0.5) bookworm; urgency=medium
 
   * fix #4859: properly configure TLSv1.3 only mode
