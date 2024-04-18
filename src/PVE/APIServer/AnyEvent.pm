@@ -123,6 +123,7 @@ sub cleanup_reqstate {
     delete $reqstate->{request};
     delete $reqstate->{proto};
     delete $reqstate->{accept_gzip};
+    delete $reqstate->{accept_deflate};
     delete $reqstate->{starttime};
 
     if ($reqstate->{tmpfilename}) {
@@ -288,7 +289,7 @@ sub response {
     $reqstate->{hdl}->timeout($self->{timeout});
 
     $nocomp = 1 if !$self->{compression};
-    $nocomp = 1 if !$reqstate->{accept_gzip};
+    $nocomp = 1 if !$reqstate->{accept_gzip} && !$reqstate->{accept_deflate};
 
     my $code = $resp->code;
     my $msg = $resp->message || HTTP::Status::status_message($code);
@@ -333,11 +334,17 @@ sub response {
 	$content_length = length($content);
 
 	if (!$nocomp && ($content_length > 1024)) {
-	    my $comp = Compress::Zlib::memGzip($content);
-	    $resp->header('Content-Encoding', 'gzip');
-	    $content = $comp;
-	    $content_length = length($content);
+	    if ($reqstate->{accept_gzip}) {
+		my $comp = Compress::Zlib::memGzip($content);
+		$resp->header('Content-Encoding', 'gzip');
+		$content = $comp;
+	    } elsif ($reqstate->{accept_deflate}) {
+		my $comp = Compress::Zlib::compress($content);
+		$resp->header('Content-Encoding', 'deflate');
+		$content = $comp;
+	    }
 	}
+	$content_length = length($content);
 	$resp->header("Content-Length" => $content_length);
 	$reqstate->{log}->{content_length} = $content_length;
 
@@ -735,7 +742,15 @@ sub proxy_request {
 	    if $auth->{api_token};
 	$headers->{'CSRFPreventionToken'} = $auth->{token}
 	    if $auth->{token};
-	$headers->{'Accept-Encoding'} = 'gzip' if ($reqstate->{accept_gzip} && $self->{compression});
+	if ($self->{compression}) {
+	    if ($reqstate->{accept_deflate} && $reqstate->{accept_gzip}) {
+		$headers->{'Accept-Encoding'} = 'gzip, deflate';
+	    } elsif ($reqstate->{accept_gzip}) {
+		$headers->{'Accept-Encoding'} = 'gzip';
+	    } elsif ($reqstate->{accept_deflate}) {
+		$headers->{'Accept-Encoding'} = 'deflate';
+	    }
+	}
 
 	if (defined(my $host = $reqstate->{request}->header('Host'))) {
 	    $headers->{Host} = $host;
@@ -1361,6 +1376,7 @@ sub process_header {
     my $conn = $request->header('Connection');
     my $accept_enc = $request->header('Accept-Encoding');
     $reqstate->{accept_gzip} = ($accept_enc && $accept_enc =~ m/gzip/) ? 1 : 0;
+    $reqstate->{accept_deflate} = ($accept_enc && $accept_enc =~ m/deflate/) ? 1 : 0;
 
     if ($conn) {
 	$reqstate->{keep_alive} = 0 if $conn =~ m/close/oi;
