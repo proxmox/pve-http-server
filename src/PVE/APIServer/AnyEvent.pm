@@ -987,7 +987,8 @@ sub handle_api2_request {
 	$download = $res->{data}->{download}
 	    if defined($res->{data}) && ref($res->{data}) eq 'HASH';
 	if (defined($download)) {
-	    if ($res->{info}->{download}) {
+	    # TODO: remove ->{download} with PVE 9.0
+	    if ($res->{info}->{download_allowed} || $res->{info}->{download}) {
 		send_file_start($self, $reqstate, $download);
 		return;
 	    } else {
