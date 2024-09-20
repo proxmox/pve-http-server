@@ -423,51 +423,49 @@ sub send_file_start {
 	    my $nocomp;
 	    my $mime;
 
-	    if (ref($download) eq 'HASH') {
-		$mime = $download->{'content-type'};
-		my $encoding = $download->{'content-encoding'};
-		my $disposition = $download->{'content-disposition'};
+	    die "invalid download information passed: '$download'\n"
+		if ref($download) ne 'HASH';
 
-		if ($download->{path} && $download->{stream} &&
-		    $reqstate->{request}->header('PVEDisableProxy'))
-		{
-		    # avoid double stream from a file, let the proxy handle it
-		    die "internal error: file proxy streaming only available for pvedaemon\n"
-			if !$self->{trusted_env};
-		    my $header = HTTP::Headers->new(
-			pvestreamfile => $download->{path},
-			Content_Type => $mime,
-		    );
-		    $header->header('Content-Encoding' => $encoding) if defined($encoding);
-		    $header->header('Content-Disposition' => $disposition) if defined($disposition);
-		    # we need some data so Content-Length gets set correctly and
-		    # the proxy doesn't wait for more data - place a canary
-		    my $resp = HTTP::Response->new(200, "OK", $header, "error canary");
-		    $self->response($reqstate, $resp);
-		    return;
-		}
+	    $mime = $download->{'content-type'};
+	    my $encoding = $download->{'content-encoding'};
+	    my $disposition = $download->{'content-disposition'};
 
-		if (!($fh = $download->{fh})) {
-		    my $path = $download->{path};
-		    die "internal error: {download} returned but neither fh not path given\n"
-			if !$path;
-		    sysopen($fh, "$path", O_NONBLOCK | O_RDONLY)
-			or die "open stream path '$path' for reading failed: $!\n";
-		}
+	    if ($download->{path} && $download->{stream} &&
+		$reqstate->{request}->header('PVEDisableProxy'))
+	    {
+		# avoid double stream from a file, let the proxy handle it
+		die "internal error: file proxy streaming only available for pvedaemon\n"
+		    if !$self->{trusted_env};
+		my $header = HTTP::Headers->new(
+		    pvestreamfile => $download->{path},
+		    Content_Type => $mime,
+		);
+		$header->header('Content-Encoding' => $encoding) if defined($encoding);
+		$header->header('Content-Disposition' => $disposition) if defined($disposition);
+		# we need some data so Content-Length gets set correctly and
+		# the proxy doesn't wait for more data - place a canary
+		my $resp = HTTP::Response->new(200, "OK", $header, "error canary");
+		$self->response($reqstate, $resp);
+		return;
+	    }
 
-		if ($download->{stream}) {
-		    my $header = HTTP::Headers->new(Content_Type => $mime);
-		    $header->header('Content-Encoding' => $encoding) if defined($encoding);
-		    $header->header('Content-Disposition' => $disposition) if defined($disposition);
-		    my $resp = HTTP::Response->new(200, "OK", $header);
-		    $self->response($reqstate, $resp, undef, 1, 0, $fh);
-		    return;
-		}
-	    } else {
-		my $filename = $download;
-		$fh = IO::File->new($filename, '<') ||
-		    die "unable to open file '$filename' - $!\n";
+	    if (!($fh = $download->{fh})) {
+		my $path = $download->{path};
+		die "internal error: {download} returned but neither fh not path given\n"
+		    if !$path;
+		sysopen($fh, "$path", O_NONBLOCK | O_RDONLY)
+		    or die "open stream path '$path' for reading failed: $!\n";
+	    }
 
+	    if ($download->{stream}) {
+		my $header = HTTP::Headers->new(Content_Type => $mime);
+		$header->header('Content-Encoding' => $encoding) if defined($encoding);
+		$header->header('Content-Disposition' => $disposition) if defined($disposition);
+		my $resp = HTTP::Response->new(200, "OK", $header);
+		$self->response($reqstate, $resp, undef, 1, 0, $fh);
+		return;
+	    } elsif (!$mime) {
+		my $filename = $download->{path};
 		my ($ext) = $filename =~ m/\.([^.]*)$/;
 		my $ext_info = $file_extension_info->{$ext};
 
@@ -959,8 +957,8 @@ sub handle_api2_request {
 	    $delay = 0 if $delay < 0;
 	}
 
-	my $download = $res->{download};
-	$download //= $res->{data}->{download}
+	my $download;
+	$download = $res->{data}->{download}
 	    if defined($res->{data}) && ref($res->{data}) eq 'HASH';
 	if (defined($download)) {
 	    if ($res->{info}->{download}) {
@@ -1152,7 +1150,7 @@ sub handle_request {
 		if (my $filename = $handler->{file}) {
 		    my $fh = IO::File->new($filename) ||
 			die "unable to open file '$filename' - $!\n";
-		    send_file_start($self, $reqstate, $filename);
+		    send_file_start($self, $reqstate, { path => $filename });
 		} else {
 		    die "internal error - no handler";
 		}
@@ -1170,7 +1168,7 @@ sub handle_request {
 		    my $filename = "$dir$file";
 		    my $fh = IO::File->new($filename) ||
 			die "unable to open file '$filename' - $!\n";
-		    send_file_start($self, $reqstate, $filename);
+		    send_file_start($self, $reqstate, { path => $filename });
 		    return;
 		}
 	    }
