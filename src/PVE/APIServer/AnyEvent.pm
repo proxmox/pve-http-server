@@ -963,8 +963,12 @@ sub handle_api2_request {
 	$download //= $res->{data}->{download}
 	    if defined($res->{data}) && ref($res->{data}) eq 'HASH';
 	if (defined($download)) {
-	    send_file_start($self, $reqstate, $download);
-	    return;
+	    if ($res->{info}->{download}) {
+		send_file_start($self, $reqstate, $download);
+		return;
+	    } else {
+		warn "Download attempted for non-marked API endpoint '$path'\n";
+	    }
 	}
 
 	my ($raw, $ct, $nocomp) = $formatter->($res, $res->{data}, $params, $path,
