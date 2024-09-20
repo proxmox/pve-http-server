@@ -1,3 +1,11 @@
+libpve-http-server-perl (4.3.0) bullseye; urgency=medium
+
+  * handler: only allow downloads for annotated endpoints
+
+  * handler: remove support for directly returned download info
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 20 Sep 2024 11:21:36 +0200
+
 libpve-http-server-perl (4.2-3) bullseye; urgency=medium
 
   * file upload: don't always calculate MD5 for syslog message, rather log the
