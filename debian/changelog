@@ -1,3 +1,10 @@
+libpve-http-server-perl (5.1.1) bookworm; urgency=medium
+
+  * handler: only allow downloads for annotated endpoints and remove support
+    for directly returned download info
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 23 Sep 2024 11:07:22 +0200
+
 libpve-http-server-perl (5.1.0) bookworm; urgency=medium
 
   * http: support the deflate compression content encoding
