@@ -708,7 +708,12 @@ sub proxy_request {
 
     eval {
 	my $target;
-	my $keep_alive = 1;
+
+	# By default, AnyEvent::HTTP reuses connections for the idempotent
+	# request methods GET/HEAD/PUT/DELETE. But not all of our PUT requests
+	# are idempotent, hence, reuse connections for GET requests only, as
+	# these should in fact be idempotent.
+	my $persistent = $method eq 'GET';
 
 	# stringify URI object and verify it starts with a slash
 	$uri = "$uri";
@@ -720,8 +725,8 @@ sub proxy_request {
 	my $may_stream_file;
 	if ($host eq 'localhost') {
 	    $target = "http://$host:85$uri";
-	    # keep alive for localhost is not worth (connection setup is about 0.2ms)
-	    $keep_alive = 0;
+	    # connection reuse for localhost is not worth (connection setup is about 0.2ms)
+	    $persistent = 0;
 	    $may_stream_file = 1;
 	} elsif (Net::IP::ip_is_ipv6($host)) {
 	    $target = "https://[$host]:8006$uri";
@@ -796,9 +801,13 @@ sub proxy_request {
 	    $method => $target,
 	    headers => $headers,
 	    timeout => 30,
-	    recurse => 0,
 	    proxy => undef, # avoid use of $ENV{HTTP_PROXY}
-	    keepalive => $keep_alive,
+	    persistent => $persistent,
+	    # if connection reuse is enabled ($persistent is 1), allow one retry, to avoid returning
+	    # HTTP 599 Too many redirections if the server happens to close the connection
+	    recurse => $persistent ? 1 : 0,
+	    # when reusing a connection, send keep-alive headers
+	    keepalive => 1,
 	    body => $content,
 	    tls_ctx => AnyEvent::TLS->new(%{$tls}),
 	    sub {
