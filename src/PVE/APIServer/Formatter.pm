@@ -92,7 +92,7 @@ sub create_auth_cookie {
 
     my $encticket = uri_escape($ticket);
 
-    return "${cookie_name}=$encticket; path=/; secure; SameSite=Strict;";
+    return "${cookie_name}=$encticket; path=/; secure; SameSite=Lax;";
 }
 
 sub create_auth_header {
