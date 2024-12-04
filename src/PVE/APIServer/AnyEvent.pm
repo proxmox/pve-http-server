@@ -1903,7 +1903,13 @@ sub accept_connections {
 		    my ($hdl, $fatal, $message) = @_;
 		    eval {
 			$self->log_aborted_request($reqstate, $message);
-			$self->client_do_disconnect($reqstate);
+			# this error callback can be called twice for the same
+			# connection/handle if the timeout is reached before
+			# any data has been received, avoid misleading errors
+			if (!$reqstate->{disconnected}) {
+			    $self->client_do_disconnect($reqstate);
+			    $reqstate->{disconnected} = 1;
+			}
 		    };
 		    if (my $err = $@) { syslog('err', "$err"); }
 		},
