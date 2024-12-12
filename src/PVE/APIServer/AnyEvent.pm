@@ -92,13 +92,14 @@ sub log_request {
     $loginfo->{written} = 1;
 
     my $peerip = $reqstate->{peer_host} || '-';
+    my $realip = $loginfo->{real_ip} || $peerip;
     my $userid = $loginfo->{userid} || '-';
     my $content_length = defined($loginfo->{content_length}) ? $loginfo->{content_length} : '-';
     my $code =  $loginfo->{code} || 500;
     my $requestline = $loginfo->{requestline} || '-';
     my $timestr = strftime("%d/%m/%Y:%H:%M:%S %z", localtime());
 
-    my $msg = "$peerip - $userid [$timestr] \"$requestline\" $code $content_length\n";
+    my $msg = "$realip - $userid [$timestr] \"$requestline\" $code $content_length\n";
 
     $self->write_log($msg);
 }
@@ -1474,6 +1475,18 @@ sub authenticate_and_handle_request {
 
     my $auth = {};
 
+    if (my $proxy_real_ip_header = $self->{proxy_real_ip_header}) {
+	if (my $proxy_real_ip_value = $request->header($proxy_real_ip_header)) {
+	    my $real_ip = Net::IP->new($proxy_real_ip_value);
+	    if (defined($real_ip) && $self->check_allowed_proxy($reqstate->{peer_host})) {
+		$reqstate->{log}->{real_ip} = Net::IP::ip_compress_address(
+		    $real_ip->ip(),
+		    $real_ip->version(),
+		);
+	    }
+	}
+    }
+
     if ($self->{spiceproxy}) {
 	my $connect_str = $request->header('Host');
 	my ($vmid, $node, $port) = $self->verify_spice_connect_url($connect_str);
@@ -1811,6 +1824,29 @@ sub check_host_access {
     }
 
     return $match_allow;
+}
+
+sub check_allowed_proxy {
+    my ($self, $client_ip) = @_;
+
+    $client_ip = PVE::APIServer::Utils::normalize_v4_in_v6($client_ip);
+    my $client_ip_object = Net::IP->new($client_ip);
+
+    if (!$client_ip_object) {
+	$self->dprint("client IP not parsable: $@");
+	return 0;
+    }
+
+    if (my $proxy_real_ip_allow_from = $self->{proxy_real_ip_allow_from}) {
+	for my $allowed_net ($proxy_real_ip_allow_from->@*) {
+	    if ($allowed_net->overlaps($client_ip_object)) {
+		$self->dprint("client IP in allowed proxies: ". $allowed_net->print());
+		return 1;
+	    }
+	}
+	return 0;
+    }
+    return 1;
 }
 
 sub accept_connections {

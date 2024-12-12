@@ -26,6 +26,8 @@ sub read_proxy_config {
     $shcmd .= 'echo \"COMPRESSION:\$COMPRESSION\";';
     $shcmd .= 'echo \"DISABLE_TLS_1_2:\$DISABLE_TLS_1_2\";';
     $shcmd .= 'echo \"DISABLE_TLS_1_3:\$DISABLE_TLS_1_3\";';
+    $shcmd .= 'echo \"PROXY_REAL_IP_HEADER:\$PROXY_REAL_IP_HEADER\";';
+    $shcmd .= 'echo \"PROXY_REAL_IP_ALLOW_FROM:\$PROXY_REAL_IP_ALLOW_FROM\";';
 
     my $data = -f $conffile ? `bash -c "$shcmd"` : '';
 
@@ -65,6 +67,19 @@ sub read_proxy_config {
 	    $res->{$key} = $value;
 	} elsif ($key eq 'TLS_KEY_FILE') {
 	    $res->{$key} = $value;
+	} elsif ($key eq 'PROXY_REAL_IP_HEADER') {
+	    $res->{$key} = $value;
+	} elsif ($key eq 'PROXY_REAL_IP_ALLOW_FROM') {
+	    my $ips = [];
+	    for my $ip (split(/,/, $value)) {
+		if ($ip eq 'all') {
+		    push @$ips, Net::IP->new('0/0') || die Net::IP::Error() . "\n";
+		    push @$ips, Net::IP->new('::/0') || die Net::IP::Error() . "\n";
+		    next;
+		}
+		push @$ips, Net::IP->new(normalize_v4_in_v6($ip)) || die Net::IP::Error() . "\n";
+	    }
+	    $res->{$key} = $ips;
 	} elsif (grep { $key eq $_ } @$boolean_options) {
 	    die "unknown value '$value' - use 0 or 1\n" if $value !~ m/^(0|1)$/;
 	    $res->{$key} = $value;
