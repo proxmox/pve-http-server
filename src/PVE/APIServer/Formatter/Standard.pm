@@ -27,7 +27,7 @@ sub prepare_response_data {
 	# HACK: extjs wants 'success' property instead of useful HTTP status codes
 	if (HTTP::Status::is_error($res->{status})) {
 	    $success = 0;
-	    $new->{message} = $res->{message} || status_message($res->{status});
+	    $new->{message} = "$res->{message}" || status_message($res->{status});
 	    $new->{status} = $res->{status} || 200;
 	    $res->{message} = undef;
 	    $res->{status} = 200;
