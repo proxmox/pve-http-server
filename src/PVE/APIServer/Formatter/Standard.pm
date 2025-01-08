@@ -33,6 +33,10 @@ sub prepare_response_data {
 	    $res->{status} = 200;
 	}
 	$new->{success} = $success;
+    } elsif ($format eq 'json') {
+	if (HTTP::Status::is_error($res->{status})) {
+	    $new->{message} = "$res->{message}" || status_message($res->{status});
+	}
     }
 
     if ($success && $res->{total}) {
