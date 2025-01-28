@@ -389,6 +389,9 @@ sub error {
     my ($self, $reqstate, $code, $msg, $hdr, $content) = @_;
 
     eval {
+	$content //= $msg; # write error into body by default
+	# lack of content type here means either 'application/octet-stream' or the client
+	# can guess. This is fine since we don't know what content/msg actually contains.
 	my $resp = HTTP::Response->new($code, $msg, $hdr, $content);
 	$self->response($reqstate, $resp);
     };
