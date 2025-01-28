@@ -1,3 +1,33 @@
+libpve-http-server-perl (5.2.0) bookworm; urgency=medium
+
+  * fix external linking when cookie was acquired via HTML formatter due to
+    overly strict SameSite attribute.
+
+  * fix #5699: add support to define a HTTP header from which the real IP of a
+    connection should be parsed from. This can be useful for setups with a
+    reverse proxy in front of the API server.
+    On top of that add support for optionally configuring an allow-list of IP
+    networks that the real source IP must match one to allow the connection to
+    be handled.
+
+  * Always stringify error for responses to the 'extjs' formatter explicitly
+    to avoid the call to to_json fail when trying to serialize a blessed
+    object, like a PVE::APIClient::Exception.
+
+  * fix #6503: return error messages from the API also for the json formatter.
+
+  * fix #4816: do not try to disconnect twice if client sends no data,
+    avoiding a false-positive error in the system log.
+
+  * add error message directly into the HTTP body if it's empty, making it
+    easier for HTTP clients that do not have access to the HTTP headers to
+    extract said error message.
+
+  * use the '500 Internal Server Error' HTTP error response were appropriate
+    instead of '501 Not Implemented'.
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 28 Jan 2025 16:08:54 +0100
+
 libpve-http-server-perl (5.1.2) bookworm; urgency=medium
 
   * fix #5391: proxy request: avoid "HTTP 599 Too many redirections" error
