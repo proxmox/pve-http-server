@@ -507,7 +507,7 @@ sub send_file_start {
 	    $self->response($reqstate, $resp, $mtime, $nocomp);
 	};
 	if (my $err = $@) {
-	    $self->error($reqstate, 501, $err);
+	    $self->error($reqstate, HTTP_INTERNAL_SERVER_ERROR, $err);
 	}
     };
 
@@ -1023,7 +1023,7 @@ sub handle_api2_request {
 	$self->response($reqstate, $resp, undef, $nocomp, $delay);
     };
     if (my $err = $@) {
-	$self->error($reqstate, 501, $err);
+	$self->error($reqstate, HTTP_INTERNAL_SERVER_ERROR, $err);
     }
 }
 
@@ -1217,7 +1217,7 @@ sub handle_request {
 	die "no such file '$path'\n";
     };
     if (my $err = $@) {
-	$self->error($reqstate, 501, $err);
+	$self->error($reqstate, HTTP_INTERNAL_SERVER_ERROR, $err);
     }
 }
 
@@ -1307,7 +1307,7 @@ sub file_upload_multipart {
     };
     if (my $err = $@) {
 	syslog('err', $err);
-	$self->error($reqstate, 501, $err);
+	$self->error($reqstate, HTTP_INTERNAL_SERVER_ERROR, $err);
     }
 }
 
