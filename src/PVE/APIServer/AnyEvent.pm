@@ -141,11 +141,13 @@ sub client_do_disconnect {
     my $shutdown_hdl = sub {
 	my $hdl = shift;
 
-	shutdown($hdl->{fh}, 1);
 	# clear all handlers
 	$hdl->on_drain(undef);
 	$hdl->on_read(undef);
 	$hdl->on_eof(undef);
+
+	$hdl->stoptls();
+	shutdown($hdl->{fh}, 1);
     };
 
     if (my $proxyhdl = delete $reqstate->{proxyhdl}) {
