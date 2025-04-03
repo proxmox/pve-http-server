@@ -52,7 +52,7 @@ use PVE::APIServer::Utils;
 
 my $limit_max_headers = 64;
 my $limit_max_header_size = 8*1024;
-my $limit_max_post = 64*1024;
+my $limit_max_post = 512*1024;
 
 my $known_methods = {
     GET => 1,
@@ -1891,7 +1891,7 @@ sub accept_connections {
 	    $self->{conn_count}++;
 	    $reqstate->{hdl} = AnyEvent::Handle->new(
 		fh => $clientfh,
-		rbuf_max => 64*1024,
+		rbuf_max => $limit_max_post + $limit_max_header_size,
 		timeout => $self->{timeout},
 		linger => 0, # avoid problems with ssh - really needed ?
 		on_eof   => sub {
