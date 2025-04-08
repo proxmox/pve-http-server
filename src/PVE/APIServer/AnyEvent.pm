@@ -136,6 +136,13 @@ sub cleanup_reqstate {
 sub client_do_disconnect {
     my ($self, $reqstate) = @_;
 
+    # Avoid any re-entrant call. For example, the on_error callback can be called twice for the same
+    # connection/handle if the timeout is reached before any data has been received. The on_error
+    # callback might also get invoked as part of the stoptls() call during shutdown below, which is
+    # another situation where the function would be re-entered without this check.
+    return if $reqstate->{disconnected};
+    $reqstate->{disconnected} = 1;
+
     cleanup_reqstate($reqstate, 1);
 
     my $shutdown_hdl = sub {
@@ -1911,13 +1918,7 @@ sub accept_connections {
 		    my ($hdl, $fatal, $message) = @_;
 		    eval {
 			$self->log_aborted_request($reqstate, $message);
-			# this error callback can be called twice for the same
-			# connection/handle if the timeout is reached before
-			# any data has been received, avoid misleading errors
-			if (!$reqstate->{disconnected}) {
-			    $reqstate->{disconnected} = 1;
-			    $self->client_do_disconnect($reqstate);
-			}
+			$self->client_do_disconnect($reqstate);
 		    };
 		    if (my $err = $@) { syslog('err', "$err"); }
 		},
