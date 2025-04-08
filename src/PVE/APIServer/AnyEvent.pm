@@ -146,8 +146,11 @@ sub client_do_disconnect {
 	$hdl->on_read(undef);
 	$hdl->on_eof(undef);
 
-	$hdl->stoptls();
-	shutdown($hdl->{fh}, 1);
+	$self->dprint("CLOSE FH" .  $hdl->{fh}->fileno());
+
+	$hdl->stoptls(); # can invoke callbacks and destroy the handle
+
+	shutdown($hdl->{fh}, 1) if defined($hdl) && defined($hdl->{fh});
     };
 
     if (my $proxyhdl = delete $reqstate->{proxyhdl}) {
@@ -170,7 +173,7 @@ sub client_do_disconnect {
 
     $self->{conn_count}--;
 
-    $self->dprint("CLOSE FH" .  $hdl->{fh}->fileno() . " CONN$self->{conn_count}");
+    $self->dprint("DISCONNECT CONN$self->{conn_count}");
 }
 
 sub finish_response {
