@@ -1,3 +1,15 @@
+libpve-http-server-perl (5.2.2) bookworm; urgency=medium
+
+  * handle issues with clients where they actively disconnect while we also
+    actively try to close the connection, so that both happens in parallel.
+    This fixes a regression with the last update that mostly affected setups
+    with a reverse proxy like HAProxy in front of the Provmox VE API daemon,
+    where the race to close the connection was amplified due to the almost
+    non-existent latency between those two components and seemingly also by
+    how aggresive HAProxy closes connections.
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 08 Apr 2025 16:44:09 +0200
+
 libpve-http-server-perl (5.2.1) bookworm; urgency=medium
 
   * fix #6230: increase allowed post size from 64 KiB to 512 KiB to
