@@ -1915,8 +1915,8 @@ sub accept_connections {
 			# connection/handle if the timeout is reached before
 			# any data has been received, avoid misleading errors
 			if (!$reqstate->{disconnected}) {
-			    $self->client_do_disconnect($reqstate);
 			    $reqstate->{disconnected} = 1;
+			    $self->client_do_disconnect($reqstate);
 			}
 		    };
 		    if (my $err = $@) { syslog('err', "$err"); }
