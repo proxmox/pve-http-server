@@ -7,57 +7,7 @@ use HTML::Entities;
 use JSON;
 use URI::Escape;
 
-# FIXME: remove console code??
-
 # Helpers to generate simple html pages using Bootstrap markup.
-
-my $jssrc = <<_EOJS;
-PVE.open_vm_console = function(node, vmid) {
-    console.log("open vm " + vmid + " on node " + node);
-
-    var downloadWithName = function(uri, name) {
-	var link =  jQuery('#pve_console_anchor');
-	link.attr("href", uri);
-
-	// Note: we need to tell android the correct file name extension
-	// but we do not set 'download' tag for other environments, because
-	// It can have strange side effects (additional user prompt on firefox)
-	var andriod = navigator.userAgent.match(/Android/i) ? true : false;
-	if (andriod) {
-	    link.attr("download", name);
-	}
-
-	if (document.createEvent) {
-	    var evt = document.createEvent("MouseEvents");
-	    evt.initMouseEvent('click', true, true, window, 1, 0, 0, 0, 0, false, false, false, false, 0, null);
-	    link.get(0).dispatchEvent(evt);
-	} else {
-	    link.get(0).fireEvent('onclick');
-	}
-    };
-
-    jQuery.ajax("/api2/json/console", {
-      data: { vmid: vmid, node: node },
-      headers: { CSRFPreventionToken: PVE.CSRFPreventionToken },
-      dataType: 'json',
-      type: 'POST',
-      error: function(jqXHR, textStatus, errorThrown) {
-	  // fixme: howto view JS errors ?
-	  console.log("ERROR " +  textStatus + ": " + errorThrown);
-      },
-      success:   function(data) {
-	  var raw = "[virt-viewer]\\n";
-	  jQuery.each(data.data, function(k, v) {
-	      raw += k + "=" + v + "\\n";
-	  });
-	  var url = 'data:application/x-virt-viewer;charset=UTF-8,' +
-	      encodeURIComponent(raw);
-
-	  downloadWithName(url, "pve-spice.vv");
-      }
-    });
-};
-_EOJS
 
 sub new {
     my ($class, $res, $url, $auth, $config) = @_;
@@ -107,7 +57,6 @@ sub body {
 
 <script type="text/javascript">
 $jssetup
-$jssrc
 </script>
 
     <style>
