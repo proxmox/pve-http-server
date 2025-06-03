@@ -34,7 +34,7 @@ sub render_page {
 	cn => {
 	    tag => 'a',
 	    href => $get_portal_login_url->($config),
-	    onClick => "PVE.delete_auth_cookie();",
+	    onclick => "PVE.delete_auth_cookie();",
 	    text => "Logout",
 	}};
 

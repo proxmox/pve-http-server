@@ -113,6 +113,7 @@ sub el {
 
     my $noescape = {
 	placeholder => 1,
+	onclick => 1,
     };
 
     foreach my $attr (keys %param)  {
