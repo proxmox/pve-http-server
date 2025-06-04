@@ -17,6 +17,10 @@ $(BUILDDIR): src debian
 	echo "git clone git://git.proxmox.com/git/pve-http-server\\ngit checkout $(GITVERSION)" > $@.tmp/debian/SOURCE
 	mv $@.tmp $@
 
+.PHONY: tidy
+tidy:
+	git ls-files ':*.p[ml]'| xargs -n4 -P0 proxmox-perltidy
+
 .PHONY: deb
 deb: $(DEB)
 $(DEB): $(BUILDDIR)
