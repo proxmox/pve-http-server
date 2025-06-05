@@ -2025,12 +2025,8 @@ sub new {
     $self->{formatter_config}->{csrfgen_func} =
 	$self->can('generate_csrf_prevention_token');
 
-    # add default dirs which includes jquery and bootstrap
-    my $jsbase = '/usr/share/javascript';
-    add_dirs($self->{dirs}, '/js/' => "$jsbase/");
-    # libjs-bootstrap uses symlinks for this, which we do not want to allow..
-    my $glyphicons = '/usr/share/fonts/truetype/glyphicons/';
-    add_dirs($self->{dirs}, '/js/bootstrap/fonts/' => "$glyphicons");
+    # libjs-bootstrap5 uses a different dir with symlinks
+    add_dirs($self->{dirs}, '/bootstrap5/' => "/usr/share/bootstrap-html/");
 
     # init inotify
     PVE::INotify::inotify_init();

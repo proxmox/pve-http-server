@@ -53,7 +53,7 @@ sub body {
     <title>$self->{title}</title>
 
     <!-- Bootstrap -->
-    <link href="/js/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/bootstrap5/css/bootstrap.min.css" rel="stylesheet">
 
 <script type="text/javascript">
 $jssetup
@@ -65,10 +65,8 @@ body {
 }
     </style>
 
-    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-    <script src="/js/jquery/jquery.min.js"></script>
-    <!-- Include all compiled plugins (below), or include individual files as needed -->
-    <script src="/js/bootstrap/js/bootstrap.min.js"></script>
+    <!-- Include bootstrap bundle (everything necessary to run) -->
+    <script src="/bootstrap5/js/bootstrap.bundle.min.js"></script>
 
   </head>
   <body>
@@ -153,35 +151,6 @@ sub alert {
     my ($self, %param) = @_;
 
     return $self->el(class => "alert alert-danger", %param);
-}
-
-sub add_js {
-    my ($self, $js) = @_;
-
-    $self->{js} .= $js . "\n";
-}
-
-my $format_event_callback = sub {
-    my ($info) = @_;
-
-    my $pstr = encode_json($info->{param});
-    return "function(e){$info->{fn}.apply(e, $pstr);}";
-};
-
-sub button {
-    my ($self, %param) = @_;
-
-    $param{tag} = 'button';
-    $param{class} = "btn btn-default btn-xs";
-
-    if (my $click = delete $param{click}) {
-	my ($html, $id) = $self->el(%param);
-	my $cb = &$format_event_callback($click);
-	$self->add_js("jQuery('#$id').on('click', $cb);");
-	return $html;
-    } else {
-	return $self->el(%param);
-    }
 }
 
 1;

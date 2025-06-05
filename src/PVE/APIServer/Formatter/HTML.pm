@@ -27,75 +27,86 @@ my $get_portal_login_url = sub {
 sub render_page {
     my ($doc, $html, $config) = @_;
 
-    my $items = [];
-
-    push @$items, {
-	tag => 'li',
-	cn => {
-	    tag => 'a',
-	    href => $get_portal_login_url->($config),
-	    onclick => "PVE.delete_auth_cookie();",
-	    text => "Logout",
-	}};
-
     my $base_url = $get_portal_base_url->($config);
 
     my $nav = $doc->el(
-	class => "navbar navbar-inverse navbar-fixed-top",
-	role => "navigation", cn => {
-	    class => "container", cn => [
+	class => "navbar navbar-dark navbar-expand-lg bg-dark fixed-top",
+	'data-bs-theme' => 'dark',
+	role => "navigation",
+	cn => {
+	    class => "container",
+	    cn => [
 		{
-		    class => "navbar-header", cn => [
+		    tag => 'a',
+		    class => "navbar-brand",
+		    href => $base_url,
+		    text => $config->{title},
+		},
+		{
+		    tag => 'button',
+		    type => 'button',
+		    class => "navbar-toggler",
+		    'data-bs-toggle' => "collapse",
+		    'data-bs-target' => ".navbarNav",
+		    cn => [
 			{
-			    tag => 'button',
-			    type => 'button',
-			    class => "navbar-toggle",
-			    'data-toggle' => "collapse",
-			    'data-target' => ".navbar-collapse",
-			    cn => [
-				{ tag => 'span', class => 'sr-only', text => "Toggle navigation" },
-				{ tag => 'span', class => 'icon-bar' },
-				{ tag => 'span', class => 'icon-bar' },
-				{ tag => 'span', class => 'icon-bar' },
-			    ],
-			},
-			{
-			    tag => 'a',
-			    class => "navbar-brand",
-			    href => $base_url,
-			    text => $config->{title},
+			    tag => 'span',
+			    class => 'navbar-toggler-icon',
 			},
 		    ],
 		},
 		{
-		    class => "collapse navbar-collapse",
+		    class => "collapse navbar-collapse navbarNav",
 		    cn => {
 			tag => 'ul',
-			class => "nav navbar-nav",
-			cn => $items,
+			class => "navbar-nav",
+			cn => [
+			    {
+				tag => 'li',
+				class => 'nav-item',
+				cn => {
+				    tag => 'a',
+				    class => 'nav-link',
+				    href => $get_portal_login_url->($config),
+				    onclick => "PVE.delete_auth_cookie();",
+				    text => "Logout",
+				},
+			    }
+			],
 		    },
 		},
-	    ],
-	});
+	    ]
+	}
+    );
 
-    $items = [];
+    my $items = [];
     my @pcomp = split('/', $doc->{url});
     shift @pcomp; # empty
     shift @pcomp; # api2
     shift @pcomp; # $format
 
     my $href = $base_url;
-    push @$items, { tag => 'li', cn => {
-	tag => 'a',
-	href => $href,
-	text => 'Home'}};
-
-    foreach my $comp (@pcomp) {
-	$href .= "/".encode_entities($comp);
-	push @$items, { tag => 'li', cn => {
+    push @$items, {
+	tag => 'li',
+	class => 'breadcrumb-item',
+	cn => {
 	    tag => 'a',
 	    href => $href,
-	    text => $comp}};
+	    text => 'Home',
+	},
+    };
+
+    foreach my $comp (@pcomp) {
+	$href .= "/" . encode_entities($comp);
+	push @$items, {
+	    tag => 'li',
+	    class => 'breadcrumb-item',
+	    cn => {
+		tag => 'a',
+		href => $href,
+		text => $comp,
+	    },
+	};
     }
 
     my $breadcrumbs = $doc->el(tag => 'ol', class => 'breadcrumb container', cn => $items);
@@ -114,6 +125,7 @@ my $login_form = sub {
     my $items = [
 	{
 	    tag => 'label',
+	    class => 'form-label',
 	    text => "Please sign in",
 	},
 	{
@@ -150,14 +162,24 @@ my $login_form = sub {
 	    action => $get_portal_login_url->($config),
 	    cn => [
 		{
-		    class => 'form-group',
-		    cn => $items,
+		    class => "mb-3",
+		    cn => [
+			{
+			    class => 'form-group',
+			    cn => $items,
+			},
+		    ],
 		},
 		{
-		    tag => 'button',
-		    type => 'submit',
-		    class => 'btn btn-lg btn-primary btn-block',
-		    text => "Sign in",
+		    class => "d-grid",
+		    cn => [
+			{
+			    tag => 'button',
+			    type => 'submit',
+			    class => 'btn btn-lg btn-primary',
+			    text => "Sign in",
+			},
+		    ],
 		},
 	    ],
 	});
@@ -236,13 +258,13 @@ PVE::APIServer::Formatter::register_formatter($portal_format, sub {
 	} else {
 
 	    my $json = to_json($data, {allow_nonref => 1, pretty => 1, canonical => 1});
-	    $html .= $doc->el(tag => 'pre', text => $json);
+	    $html .= $doc->el(tag => 'pre', class => 'bg-light border rounded p-2', text => $json);
  	}
 
     } else {
 
 	my $json = to_json($data, {allow_nonref => 1, pretty => 1, canonical => 1});
-	$html .= $doc->el(tag => 'pre', text => $json);
+        $html .= $doc->el(tag => 'pre', class => 'bg-light border rounded p-2', text => $json);
     }
 
     $html = $doc->el(class => 'container', html => $html);
