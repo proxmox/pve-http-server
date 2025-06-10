@@ -13,15 +13,15 @@ sub new {
     my ($class, $res, $url, $auth, $config) = @_;
 
     my $self = bless {
-	url => $url,
-	title => $config->{title},
-	cookie_name => $config->{cookie_name},
-	apitoken_name => $config->{apitoken_name},
-	js => '',
+        url => $url,
+        title => $config->{title},
+        cookie_name => $config->{cookie_name},
+        apitoken_name => $config->{apitoken_name},
+        js => '',
     }, $class;
 
     if (my $username = $auth->{userid}) {
-	$self->{csrftoken} = $config->{csrfgen_func}->($username);
+        $self->{csrftoken} = $config->{csrfgen_func}->($username);
     }
 
     return $self;
@@ -33,14 +33,15 @@ sub body {
     my $jssetup = "PVE = {};\n\n"; # create namespace
 
     if ($self->{csrftoken}) {
-	$jssetup .= "PVE.CSRFPreventionToken = '$self->{csrftoken}';\n";
+        $jssetup .= "PVE.CSRFPreventionToken = '$self->{csrftoken}';\n";
     }
 
     $jssetup .= "PVE.delete_auth_cookie = function() {\n";
 
     if ($self->{cookie_name}) {
-	$jssetup .= "  document.cookie = \"$self->{cookie_name}=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=/; secure; SameSite=Lax;\";\n";
-    };
+        $jssetup .=
+            "  document.cookie = \"$self->{cookie_name}=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=/; secure; SameSite=Lax;\";\n";
+    }
     $jssetup .= "};\n";
 
     return <<_EOD;
@@ -92,54 +93,56 @@ sub el {
     my $html = "<$param{tag}";
 
     if (wantarray) {
-	$comp_id_counter++;
-	$id = "pveid$comp_id_counter";
-	$html .= " id=$id";
+        $comp_id_counter++;
+        $id = "pveid$comp_id_counter";
+        $html .= " id=$id";
     }
 
     my $skip = {
-	tag => 1,
-	cn => 1,
-	html => 1,
-	text => 1,
+        tag => 1,
+        cn => 1,
+        html => 1,
+        text => 1,
     };
 
     my $boolattr = {
-	required => 1,
-	autofocus => 1,
+        required => 1,
+        autofocus => 1,
     };
 
     my $noescape = {
-	placeholder => 1,
-	onclick => 1,
+        placeholder => 1,
+        onclick => 1,
     };
 
-    foreach my $attr (keys %param)  {
-	next if $skip->{$attr};
-	my $v = $noescape->{$attr} ? $param{$attr} : uri_escape_utf8($param{$attr}, "^\/\ A-Za-z0-9\-\._~");
-	next if !defined($v);
-	if ($boolattr->{$attr}) {
-	    $html .= " $attr" if $v;
-	} else {
-	    $html .= " $attr=\"$v\"";
-	}
+    foreach my $attr (keys %param) {
+        next if $skip->{$attr};
+        my $v =
+            $noescape->{$attr}
+            ? $param{$attr}
+            : uri_escape_utf8($param{$attr}, "^\/\ A-Za-z0-9\-\._~");
+        next if !defined($v);
+        if ($boolattr->{$attr}) {
+            $html .= " $attr" if $v;
+        } else {
+            $html .= " $attr=\"$v\"";
+        }
     }
 
     $html .= ">";
 
-
     if (my $cn = $param{cn}) {
-	if(ref($cn) eq 'ARRAY'){
-	    foreach my $rec (@$cn) {
-		$html .= $self->el(%$rec);
-	    }
-	} else {
-	    $html .= $self->el(%$cn);
-	}
+        if (ref($cn) eq 'ARRAY') {
+            foreach my $rec (@$cn) {
+                $html .= $self->el(%$rec);
+            }
+        } else {
+            $html .= $self->el(%$cn);
+        }
     } elsif ($param{html}) {
-	$html .= $param{html};
+        $html .= $param{html};
     } elsif ($param{text}) {
-	$html .= encode_entities($param{text});
+        $html .= encode_entities($param{text});
     }
 
     $html .= "</$param{tag}>";

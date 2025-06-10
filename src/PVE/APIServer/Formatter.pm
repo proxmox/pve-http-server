@@ -15,7 +15,7 @@ sub register_formatter {
     my ($format, $code) = @_;
 
     die "formatter '$format' already defined"
-	if defined($formatter_hash->{$format});
+        if defined($formatter_hash->{$format});
 
     $formatter_hash->{$format} = $code;
 }
@@ -23,20 +23,20 @@ sub register_formatter {
 sub register_page_formatter {
     my (%config) = @_;
 
-    my $format = $config{format} ||
-	die "missing format";
+    my $format = $config{format}
+        || die "missing format";
 
-    my $path = $config{path} ||
-	die "missing path";
+    my $path = $config{path}
+        || die "missing path";
 
-    my $method = $config{method} ||
-	die "missing method";
+    my $method = $config{method}
+        || die "missing method";
 
-    my $code = $config{code} ||
-	die "missing formatter code";
+    my $code = $config{code}
+        || die "missing formatter code";
 
     die "duplicate page formatter for '$method: $path'"
-	if defined($page_formatter_hash->{$format}->{$method}->{$path});
+        if defined($page_formatter_hash->{$format}->{$method}->{$path});
 
     $page_formatter_hash->{$format}->{$method}->{$path} = $code;
 }
@@ -47,8 +47,8 @@ sub get_formatter {
     return undef if !defined($format);
 
     if (defined($method) && defined($path)) {
-	my $code = $page_formatter_hash->{$format}->{$method}->{$path};
-	return $code if defined($code);
+        my $code = $page_formatter_hash->{$format}->{$method}->{$path};
+        return $code if defined($code);
     }
 
     return $formatter_hash->{$format};
@@ -60,7 +60,7 @@ sub register_login_formatter {
     my ($format, $code) = @_;
 
     die "login formatter '$format' already defined"
-	if defined($login_formatter_hash->{$format});
+        if defined($login_formatter_hash->{$format});
 
     $login_formatter_hash->{$format} = $code;
 }

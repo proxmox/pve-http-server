@@ -30,53 +30,53 @@ sub render_page {
     my $base_url = $get_portal_base_url->($config);
 
     my $nav = $doc->el(
-	class => "navbar navbar-dark navbar-expand-lg bg-dark fixed-top",
-	'data-bs-theme' => 'dark',
-	role => "navigation",
-	cn => {
-	    class => "container",
-	    cn => [
-		{
-		    tag => 'a',
-		    class => "navbar-brand",
-		    href => $base_url,
-		    text => $config->{title},
-		},
-		{
-		    tag => 'button',
-		    type => 'button',
-		    class => "navbar-toggler",
-		    'data-bs-toggle' => "collapse",
-		    'data-bs-target' => ".navbarNav",
-		    cn => [
-			{
-			    tag => 'span',
-			    class => 'navbar-toggler-icon',
-			},
-		    ],
-		},
-		{
-		    class => "collapse navbar-collapse navbarNav",
-		    cn => {
-			tag => 'ul',
-			class => "navbar-nav",
-			cn => [
-			    {
-				tag => 'li',
-				class => 'nav-item',
-				cn => {
-				    tag => 'a',
-				    class => 'nav-link',
-				    href => $get_portal_login_url->($config),
-				    onclick => "PVE.delete_auth_cookie();",
-				    text => "Logout",
-				},
-			    }
-			],
-		    },
-		},
-	    ]
-	}
+        class => "navbar navbar-dark navbar-expand-lg bg-dark fixed-top",
+        'data-bs-theme' => 'dark',
+        role => "navigation",
+        cn => {
+            class => "container",
+            cn => [
+                {
+                    tag => 'a',
+                    class => "navbar-brand",
+                    href => $base_url,
+                    text => $config->{title},
+                },
+                {
+                    tag => 'button',
+                    type => 'button',
+                    class => "navbar-toggler",
+                    'data-bs-toggle' => "collapse",
+                    'data-bs-target' => ".navbarNav",
+                    cn => [
+                        {
+                            tag => 'span',
+                            class => 'navbar-toggler-icon',
+                        },
+                    ],
+                },
+                {
+                    class => "collapse navbar-collapse navbarNav",
+                    cn => {
+                        tag => 'ul',
+                        class => "navbar-nav",
+                        cn => [
+                            {
+                                tag => 'li',
+                                class => 'nav-item',
+                                cn => {
+                                    tag => 'a',
+                                    class => 'nav-link',
+                                    href => $get_portal_login_url->($config),
+                                    onclick => "PVE.delete_auth_cookie();",
+                                    text => "Logout",
+                                },
+                            },
+                        ],
+                    },
+                },
+            ],
+        },
     );
 
     my $items = [];
@@ -86,27 +86,29 @@ sub render_page {
     shift @pcomp; # $format
 
     my $href = $base_url;
-    push @$items, {
-	tag => 'li',
-	class => 'breadcrumb-item',
-	cn => {
-	    tag => 'a',
-	    href => $href,
-	    text => 'Home',
-	},
-    };
+    push @$items,
+        {
+            tag => 'li',
+            class => 'breadcrumb-item',
+            cn => {
+                tag => 'a',
+                href => $href,
+                text => 'Home',
+            },
+        };
 
     foreach my $comp (@pcomp) {
-	$href .= "/" . encode_entities($comp);
-	push @$items, {
-	    tag => 'li',
-	    class => 'breadcrumb-item',
-	    cn => {
-		tag => 'a',
-		href => $href,
-		text => $comp,
-	    },
-	};
+        $href .= "/" . encode_entities($comp);
+        push @$items,
+            {
+                tag => 'li',
+                class => 'breadcrumb-item',
+                cn => {
+                    tag => 'a',
+                    href => $href,
+                    text => $comp,
+                },
+            };
     }
 
     my $breadcrumbs = $doc->el(tag => 'ol', class => 'breadcrumb container', cn => $items);
@@ -123,30 +125,30 @@ my $login_form = sub {
     my $password = $param->{password} || '';
 
     my $items = [
-	{
-	    tag => 'label',
-	    class => 'form-label',
-	    text => "Please sign in",
-	},
-	{
-	    tag => 'input',
-	    type => 'text',
-	    class => 'form-control',
-	    name => 'username',
-	    value => $username,
-	    placeholder => "Enter user name",
-	    required => 1,
-	    autofocus => 1,
-	},
-	{
-	    tag => 'input',
-	    type => 'password',
-	    class => 'form-control',
-	    name => 'password',
-	    value => $password,
-	    placeholder => 'Password',
-	    required => 1,
-	},
+        {
+            tag => 'label',
+            class => 'form-label',
+            text => "Please sign in",
+        },
+        {
+            tag => 'input',
+            type => 'text',
+            class => 'form-control',
+            name => 'username',
+            value => $username,
+            placeholder => "Enter user name",
+            required => 1,
+            autofocus => 1,
+        },
+        {
+            tag => 'input',
+            type => 'password',
+            class => 'form-control',
+            name => 'password',
+            value => $password,
+            placeholder => 'Password',
+            required => 1,
+        },
     ];
 
     my $html = '';
@@ -154,165 +156,182 @@ my $login_form = sub {
     $html .= $doc->alert(text => $errmsg) if ($errmsg);
 
     $html .= $doc->el(
-	class => 'container',
-	cn => {
-	    tag => 'form',
-	    role => 'form',
-	    method => 'POST',
-	    action => $get_portal_login_url->($config),
-	    cn => [
-		{
-		    class => "mb-3",
-		    cn => [
-			{
-			    class => 'form-group',
-			    cn => $items,
-			},
-		    ],
-		},
-		{
-		    class => "d-grid",
-		    cn => [
-			{
-			    tag => 'button',
-			    type => 'submit',
-			    class => 'btn btn-lg btn-primary',
-			    text => "Sign in",
-			},
-		    ],
-		},
-	    ],
-	});
+        class => 'container',
+        cn => {
+            tag => 'form',
+            role => 'form',
+            method => 'POST',
+            action => $get_portal_login_url->($config),
+            cn => [
+                {
+                    class => "mb-3",
+                    cn => [
+                        {
+                            class => 'form-group',
+                            cn => $items,
+                        },
+                    ],
+                },
+                {
+                    class => "d-grid",
+                    cn => [
+                        {
+                            tag => 'button',
+                            type => 'submit',
+                            class => 'btn btn-lg btn-primary',
+                            text => "Sign in",
+                        },
+                    ],
+                },
+            ],
+        },
+    );
 
     return $html;
 };
 
-PVE::APIServer::Formatter::register_login_formatter($portal_format, sub {
-    my ($path, $auth, $config) = @_;
+PVE::APIServer::Formatter::register_login_formatter(
+    $portal_format,
+    sub {
+        my ($path, $auth, $config) = @_;
 
-    my $headers = HTTP::Headers->new(Location => $get_portal_login_url->($config));
-    return HTTP::Response->new(301, "Moved", $headers);
-});
+        my $headers = HTTP::Headers->new(Location => $get_portal_login_url->($config));
+        return HTTP::Response->new(301, "Moved", $headers);
+    },
+);
 
-PVE::APIServer::Formatter::register_formatter($portal_format, sub {
-    my ($res, $data, $param, $path, $auth, $config) = @_;
+PVE::APIServer::Formatter::register_formatter(
+    $portal_format,
+    sub {
+        my ($res, $data, $param, $path, $auth, $config) = @_;
 
-    # fixme: clumsy!
-    PVE::APIServer::Formatter::Standard::prepare_response_data($portal_format, $res);
-    $data = $res->{data};
+        # fixme: clumsy!
+        PVE::APIServer::Formatter::Standard::prepare_response_data($portal_format, $res);
+        $data = $res->{data};
 
-    my $html = '';
-    my $doc = PVE::APIServer::Formatter::Bootstrap->new($res, $path, $auth, $config);
+        my $html = '';
+        my $doc = PVE::APIServer::Formatter::Bootstrap->new($res, $path, $auth, $config);
 
-    if (!HTTP::Status::is_success($res->{status})) {
-	$html .= $doc->alert(text => "Error $res->{status}: $res->{message}");
-    }
+        if (!HTTP::Status::is_success($res->{status})) {
+            $html .= $doc->alert(text => "Error $res->{status}: $res->{message}");
+        }
 
-    my $lnk;
+        my $lnk;
 
-    if (my $info = $res->{info}) {
-	$html .= $doc->el(tag => 'h3', text => 'Description');
-	$html .= $doc->el(tag => 'p', text => $info->{description});
+        if (my $info = $res->{info}) {
+            $html .= $doc->el(tag => 'h3', text => 'Description');
+            $html .= $doc->el(tag => 'p', text => $info->{description});
 
-	$lnk = PVE::JSONSchema::method_get_child_link($info);
-    }
+            $lnk = PVE::JSONSchema::method_get_child_link($info);
+        }
 
-    if ($lnk && $data && $data->{data} && HTTP::Status::is_success($res->{status})) {
+        if ($lnk && $data && $data->{data} && HTTP::Status::is_success($res->{status})) {
 
-	my $href = $lnk->{href};
-	if ($href =~ m/^\{(\S+)\}$/) {
+            my $href = $lnk->{href};
+            if ($href =~ m/^\{(\S+)\}$/) {
 
-	    my $items = [];
+                my $items = [];
 
-	    my $prop = $1;
-	    $path =~ s/\/+$//; # remove trailing slash
+                my $prop = $1;
+                $path =~ s/\/+$//; # remove trailing slash
 
-	    foreach my $elem (sort {$a->{$prop} cmp $b->{$prop}} @{$data->{data}}) {
-		next if !ref($elem);
+                foreach my $elem (sort { $a->{$prop} cmp $b->{$prop} } @{ $data->{data} }) {
+                    next if !ref($elem);
 
-		if (defined(my $value = $elem->{$prop})) {
-		    my $tv = to_json($elem, {pretty => 1, allow_nonref => 1, canonical => 1});
+                    if (defined(my $value = $elem->{$prop})) {
+                        my $tv =
+                            to_json($elem, { pretty => 1, allow_nonref => 1, canonical => 1 });
 
-		    push @$items, {
-			tag => 'a',
-			class => 'list-group-item',
-			href => "$path/".encode_entities($value),
-			cn => [
-			    {
-				tag => 'h4',
-				class => 'list-group-item-heading',
-				text => $value,
-			    },
-			    {
-				tag => 'pre',
-				class => 'list-group-item',
-				text => $tv,
-			    },
-			],
-		    };
-		}
-	    }
+                        push @$items,
+                            {
+                                tag => 'a',
+                                class => 'list-group-item',
+                                href => "$path/" . encode_entities($value),
+                                cn => [
+                                    {
+                                        tag => 'h4',
+                                        class => 'list-group-item-heading',
+                                        text => $value,
+                                    },
+                                    {
+                                        tag => 'pre',
+                                        class => 'list-group-item',
+                                        text => $tv,
+                                    },
+                                ],
+                            };
+                    }
+                }
 
-	    $html .= $doc->el(class => 'list-group', cn => $items);
+                $html .= $doc->el(class => 'list-group', cn => $items);
 
-	} else {
+            } else {
 
-	    my $json = to_json($data, {allow_nonref => 1, pretty => 1, canonical => 1});
-	    $html .= $doc->el(tag => 'pre', class => 'bg-light border rounded p-2', text => $json);
- 	}
+                my $json = to_json($data, { allow_nonref => 1, pretty => 1, canonical => 1 });
+                $html .=
+                    $doc->el(tag => 'pre', class => 'bg-light border rounded p-2', text => $json);
+            }
 
-    } else {
+        } else {
 
-	my $json = to_json($data, {allow_nonref => 1, pretty => 1, canonical => 1});
-        $html .= $doc->el(tag => 'pre', class => 'bg-light border rounded p-2', text => $json);
-    }
+            my $json = to_json($data, { allow_nonref => 1, pretty => 1, canonical => 1 });
+            $html .=
+                $doc->el(tag => 'pre', class => 'bg-light border rounded p-2', text => $json);
+        }
 
-    $html = $doc->el(class => 'container', html => $html);
+        $html = $doc->el(class => 'container', html => $html);
 
-    my $raw = render_page($doc, $html, $config);
-    return ($raw, $portal_ct);
-});
+        my $raw = render_page($doc, $html, $config);
+        return ($raw, $portal_ct);
+    },
+);
 
 PVE::APIServer::Formatter::register_page_formatter(
     'format' => $portal_format,
     method => 'GET',
     path => "/access/ticket",
     code => sub {
-	my ($res, $data, $param, $path, $auth, $config) = @_;
+        my ($res, $data, $param, $path, $auth, $config) = @_;
 
-	my $doc = PVE::APIServer::Formatter::Bootstrap->new($res, $path, $auth, $config);
+        my $doc = PVE::APIServer::Formatter::Bootstrap->new($res, $path, $auth, $config);
 
-	my $html = $login_form->($config, $doc);
+        my $html = $login_form->($config, $doc);
 
-	my $raw = render_page($doc, $html, $config);
-	return ($raw, $portal_ct);
-    });
+        my $raw = render_page($doc, $html, $config);
+        return ($raw, $portal_ct);
+    },
+);
 
 PVE::APIServer::Formatter::register_page_formatter(
     'format' => $portal_format,
     method => 'POST',
     path => "/access/ticket",
     code => sub {
-	my ($res, $data, $param, $path, $auth, $config) = @_;
+        my ($res, $data, $param, $path, $auth, $config) = @_;
 
-	if (HTTP::Status::is_success($res->{status})) {
-	    my $cookie = PVE::APIServer::Formatter::create_auth_cookie(
-		$data->{ticket}, $config->{cookie_name});
+        if (HTTP::Status::is_success($res->{status})) {
+            my $cookie = PVE::APIServer::Formatter::create_auth_cookie(
+                $data->{ticket},
+                $config->{cookie_name},
+            );
 
-	    my $headers = HTTP::Headers->new(Location => $get_portal_base_url->($config),
-					     'Set-Cookie' => $cookie);
-	    return HTTP::Response->new(301, "Moved", $headers);
-	}
+            my $headers = HTTP::Headers->new(
+                Location => $get_portal_base_url->($config),
+                'Set-Cookie' => $cookie,
+            );
+            return HTTP::Response->new(301, "Moved", $headers);
+        }
 
-	# Note: HTTP server redirects to 'GET /access/ticket', so below
-	# output is not really visible.
+        # Note: HTTP server redirects to 'GET /access/ticket', so below
+        # output is not really visible.
 
-	my $doc = PVE::APIServer::Formatter::Bootstrap->new($res, $path, $auth, $config);
+        my $doc = PVE::APIServer::Formatter::Bootstrap->new($res, $path, $auth, $config);
 
-	my $html = $login_form->($config, $doc);
+        my $html = $login_form->($config, $doc);
 
-	my $raw = render_page($doc, $html, $config);
-	return ($raw, $portal_ct);
-    });
+        my $raw = render_page($doc, $html, $config);
+        return ($raw, $portal_ct);
+    },
+);
 
 1;

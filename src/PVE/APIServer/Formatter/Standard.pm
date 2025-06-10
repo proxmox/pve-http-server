@@ -16,130 +16,148 @@ sub prepare_response_data {
 
     my $success = 1;
     my $new = {
-	data => $res->{data},
+        data => $res->{data},
     };
-    if (scalar(keys %{$res->{errors}})) {
-	$success = 0;
-	$new->{errors} = $res->{errors};
+    if (scalar(keys %{ $res->{errors} })) {
+        $success = 0;
+        $new->{errors} = $res->{errors};
     }
 
     if ($format eq 'extjs' || $format eq 'htmljs') {
-	# HACK: extjs wants 'success' property instead of useful HTTP status codes
-	if (HTTP::Status::is_error($res->{status})) {
-	    $success = 0;
-	    $new->{message} = "$res->{message}" || status_message($res->{status});
-	    $new->{status} = $res->{status} || 200;
-	    $res->{message} = undef;
-	    $res->{status} = 200;
-	}
-	$new->{success} = $success;
+        # HACK: extjs wants 'success' property instead of useful HTTP status codes
+        if (HTTP::Status::is_error($res->{status})) {
+            $success = 0;
+            $new->{message} = "$res->{message}" || status_message($res->{status});
+            $new->{status} = $res->{status} || 200;
+            $res->{message} = undef;
+            $res->{status} = 200;
+        }
+        $new->{success} = $success;
     } elsif ($format eq 'json') {
-	if (HTTP::Status::is_error($res->{status})) {
-	    $new->{message} = "$res->{message}" || status_message($res->{status});
-	}
+        if (HTTP::Status::is_error($res->{status})) {
+            $new->{message} = "$res->{message}" || status_message($res->{status});
+        }
     }
 
     if ($success && $res->{total}) {
-	$new->{total} = $res->{total};
+        $new->{total} = $res->{total};
     }
 
     if ($success && $res->{changes}) {
-	$new->{changes} = $res->{changes};
+        $new->{changes} = $res->{changes};
     }
 
     $res->{data} = $new;
 }
 
-PVE::APIServer::Formatter::register_formatter('json', sub {
-    my ($res, $data, $param, $path, $auth, $config) = @_;
+PVE::APIServer::Formatter::register_formatter(
+    'json',
+    sub {
+        my ($res, $data, $param, $path, $auth, $config) = @_;
 
-    my $nocomp = 0;
+        my $nocomp = 0;
 
-    my $ct = 'application/json;charset=UTF-8';
+        my $ct = 'application/json;charset=UTF-8';
 
-    prepare_response_data('json', $res);
+        prepare_response_data('json', $res);
 
-    my $raw = to_json($res->{data}, {utf8 => 1, allow_nonref => 1});
+        my $raw = to_json($res->{data}, { utf8 => 1, allow_nonref => 1 });
 
-    return ($raw, $ct, $nocomp);
-});
+        return ($raw, $ct, $nocomp);
+    },
+);
 
+PVE::APIServer::Formatter::register_formatter(
+    'extjs',
+    sub {
+        my ($res, $data, $param, $path, $auth, $config) = @_;
 
-PVE::APIServer::Formatter::register_formatter('extjs', sub {
-    my ($res, $data, $param, $path, $auth, $config) = @_;
+        my $nocomp = 0;
 
-    my $nocomp = 0;
+        my $ct = 'application/json;charset=UTF-8';
 
-    my $ct = 'application/json;charset=UTF-8';
+        prepare_response_data('extjs', $res);
 
-    prepare_response_data('extjs', $res);
+        my $raw = to_json($res->{data}, { utf8 => 1, allow_nonref => 1 });
 
-    my $raw = to_json($res->{data}, {utf8 => 1, allow_nonref => 1});
+        return ($raw, $ct, $nocomp);
+    },
+);
 
-    return ($raw, $ct, $nocomp);
-});
+PVE::APIServer::Formatter::register_formatter(
+    'htmljs',
+    sub {
+        my ($res, $data, $param, $path, $auth, $config) = @_;
 
-PVE::APIServer::Formatter::register_formatter('htmljs', sub {
-    my ($res, $data, $param, $path, $auth, $config) = @_;
+        my $nocomp = 0;
 
-    my $nocomp = 0;
+        # we use this for extjs file upload forms
 
-    # we use this for extjs file upload forms
+        my $ct = 'text/html;charset=UTF-8';
 
-    my $ct = 'text/html;charset=UTF-8';
+        prepare_response_data('htmljs', $res);
 
-    prepare_response_data('htmljs', $res);
+        my $raw = encode_entities(to_json($res->{data}, { allow_nonref => 1 }));
 
-    my $raw = encode_entities(to_json($res->{data}, {allow_nonref => 1}));
+        return ($raw, $ct, $nocomp);
+    },
+);
 
-    return ($raw, $ct, $nocomp);
-});
+PVE::APIServer::Formatter::register_formatter(
+    'spiceconfig',
+    sub {
+        my ($res, $data, $param, $path, $auth, $config) = @_;
 
+        my $nocomp = 0;
 
-PVE::APIServer::Formatter::register_formatter('spiceconfig', sub {
-    my ($res, $data, $param, $path, $auth, $config) = @_;
+        my $ct = 'application/x-virt-viewer;charset=UTF-8';
 
-    my $nocomp = 0;
+        prepare_response_data('spiceconfig', $res);
 
-    my $ct = 'application/x-virt-viewer;charset=UTF-8';
+        $data = $res->{data};
 
-    prepare_response_data('spiceconfig', $res);
+        my $raw;
 
-    $data = $res->{data};
+        if ($data && ref($data) && ref($data->{data})) {
+            $raw = "[virt-viewer]\n";
+            while (my ($key, $value) = each %{ $data->{data} }) {
+                $raw .= "$key=$value\n" if defined($value);
+            }
+        }
 
-    my $raw;
+        return ($raw, $ct, $nocomp);
+    },
+);
 
-    if ($data && ref($data) && ref($data->{data})) {
-	$raw = "[virt-viewer]\n";
-	while (my ($key, $value) = each %{$data->{data}}) {
-	    $raw .= "$key=$value\n" if defined($value);
-	}
-    }
+PVE::APIServer::Formatter::register_formatter(
+    'png',
+    sub {
+        my ($res, $data, $param, $path, $auth, $config) = @_;
 
-    return ($raw, $ct, $nocomp);
-});
+        my $nocomp = 1;
 
-PVE::APIServer::Formatter::register_formatter('png', sub {
-    my ($res, $data, $param, $path, $auth, $config) = @_;
+        my $ct = 'image/png';
 
-    my $nocomp = 1;
+        prepare_response_data('png', $res);
 
-    my $ct =  'image/png';
+        $data = $res->{data};
 
-    prepare_response_data('png', $res);
+        # fixme: better to revove that whole png thing ?
 
-    $data = $res->{data};
+        my $filename;
+        my $raw = '';
 
-    # fixme: better to revove that whole png thing ?
+        if (
+            $data
+            && ref($data)
+            && ref($data->{data})
+            && $data->{data}->{filename}
+            && defined($data->{data}->{image})
+        ) {
+            $filename = $data->{data}->{filename};
+            $raw = $data->{data}->{image};
+        }
 
-    my $filename;
-    my $raw = '';
-
-    if ($data && ref($data) && ref($data->{data}) &&
-	$data->{data}->{filename} && defined($data->{data}->{image})) {
-	$filename = $data->{data}->{filename};
-	$raw = $data->{data}->{image};
-    }
-
-    return ($raw, $ct, $nocomp);
-});
+        return ($raw, $ct, $nocomp);
+    },
+);

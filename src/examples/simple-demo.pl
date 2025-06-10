@@ -46,61 +46,66 @@ sub auth_handler {
     my ($self, $method, $rel_uri, $ticket, $token, $peer_host) = @_;
 
     # explicitly allow some calls without authentication
-    if ($rel_uri eq '/access/ticket' && 
-	($method eq 'POST' || $method eq 'GET')) {
-	return; # allow call to create ticket
+    if (
+        $rel_uri eq '/access/ticket'
+        && ($method eq 'POST' || $method eq 'GET')
+    ) {
+        return; # allow call to create ticket
     }
 
     my $userid = verify_ticket($ticket);
 
     return {
-	ticket => $ticket,
-	userid => $userid,
-    };    
+        ticket => $ticket,
+        userid => $userid,
+    };
 }
 
 sub rest_handler {
     my ($self, $clientip, $method, $rel_uri, $auth, $params) = @_;
 
     my $resp = {
-	status => HTTP_NOT_IMPLEMENTED,
-	message => "Method '$method $rel_uri' not implemented",
+        status => HTTP_NOT_IMPLEMENTED,
+        message => "Method '$method $rel_uri' not implemented",
     };
     if ($rel_uri eq '/access/ticket') {
-	if ($method eq 'POST') {
-	    if ($params->{username} && $params->{username} eq 'demo' &&
-		$params->{password} && $params->{password} eq 'demo') {
-		return {
-		    status => HTTP_OK,
-		    data => {
-			ticket => create_ticket($params->{username}),
-		    },
-		};
-	    }
-	    return $resp;
-	} elsif ($method eq 'GET') {
-	    # this is allowed to display the login form
-	    return { status => HTTP_OK, data => {} };
-	} else {
-	    return $resp;
-	}
+        if ($method eq 'POST') {
+            if (
+                $params->{username}
+                && $params->{username} eq 'demo'
+                && $params->{password}
+                && $params->{password} eq 'demo'
+            ) {
+                return {
+                    status => HTTP_OK,
+                    data => {
+                        ticket => create_ticket($params->{username}),
+                    },
+                };
+            }
+            return $resp;
+        } elsif ($method eq 'GET') {
+            # this is allowed to display the login form
+            return { status => HTTP_OK, data => {} };
+        } else {
+            return $resp;
+        }
     }
-    
+
     $resp = {
-	data => {
-	    method => $method,
-	    clientip => $clientip,
-	    rel_uri =>  $rel_uri,
-	    auth => $auth,
-	    params => $params,
-	},
-	info => { description => "You called API method '$method $rel_uri'" },
-	status => HTTP_OK,
+        data => {
+            method => $method,
+            clientip => $clientip,
+            rel_uri => $rel_uri,
+            auth => $auth,
+            params => $params,
+        },
+        info => { description => "You called API method '$method $rel_uri'" },
+        status => HTTP_OK,
     };
 
     return $resp;
 }
-
 
 package main;
 
@@ -122,12 +127,15 @@ my $port = 9999;
 
 my $cert_file = "simple-demo.pem";
 
-if (! -f $cert_file) {
+if (!-f $cert_file) {
     print "generating demo server certificate\n";
-    my $cmd = ['openssl', 'req', '-batch', '-x509', '-newkey', 'rsa:4096',
-	       '-nodes', '-keyout', $cert_file, '-out', $cert_file,
-	       '-subj', "/CN=$nodename/",
-	       '-days', '3650'];
+    #<<< skip perltidy reformatting this long command
+    my $cmd = [
+        'openssl', 'req', '-batch', '-x509', '-newkey', 'rsa:4096', '-nodes',
+        '-keyout', $cert_file, '-out', $cert_file, '-subj', "/CN=$nodename/",
+        '-days', '3650',
+    ];
+    #>>>
     run_command($cmd);
 }
 
@@ -135,18 +143,18 @@ my $socket = IO::Socket::IP->new(
     LocalAddr => $nodename,
     LocalPort => $port,
     Listen => SOMAXCONN,
-    Proto  => 'tcp',
+    Proto => 'tcp',
     GetAddrInfoFlags => 0,
-    ReuseAddr => 1) ||
-    die "unable to create socket - $@\n";
+    ReuseAddr => 1,
+) || die "unable to create socket - $@\n";
 
 # we often observe delays when using Nagle algorithm,
 # so we disable that to maximize performance
 setsockopt($socket, IPPROTO_TCP, TCP_NODELAY, 1);
 
 my $accept_lock_fn = "simple-demo.lck";
-my $lockfh = IO::File->new(">>${accept_lock_fn}") ||
-    die "unable to open lock file '${accept_lock_fn}' - $!\n";
+my $lockfh = IO::File->new(">>${accept_lock_fn}")
+    || die "unable to open lock file '${accept_lock_fn}' - $!\n";
 
 my $server = DemoServer->new(
     socket => $socket,
@@ -154,9 +162,9 @@ my $server = DemoServer->new(
     lockfh => $lockfh,
     title => 'Simple Demo API',
     logfh => \*STDOUT,
-    tls_ctx  => { verify => 0, cert_file => $cert_file },
+    tls_ctx => { verify => 0, cert_file => $cert_file },
     pages => {
-	'/' => sub { get_index($nodename, @_) },
+        '/' => sub { get_index($nodename, @_) },
     },
 );
 
@@ -181,7 +189,7 @@ my $root_page = <<__EOD__;
   </body>
 </html>
 __EOD__
-    
+
 sub get_index {
     my ($nodename, $server, $r, $args) = @_;
 
