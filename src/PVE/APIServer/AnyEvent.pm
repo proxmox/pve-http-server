@@ -429,6 +429,7 @@ my $file_extension_info = {
     mp3 => { ct => 'audio/mpeg', nocomp => 1 },
     oga => { ct => 'audio/ogg', nocomp => 1 },
     tgz => { ct => 'application/x-compressed-tar', nocomp => 1 },
+    wasm => { ct => 'application/wasm' },
 };
 
 sub send_file_start {
