@@ -1655,7 +1655,7 @@ sub authenticate_and_handle_request {
 
         if ($auth->{isUpload} && !$self->{trusted_env}) {
             die "upload 'Content-Type '$ctype' not implemented\n"
-                if !($boundary && $ct && ($ct eq 'multipart/form-data'));
+                if !($boundary && $ct && $ct eq 'multipart/form-data');
 
             die "upload without content length header not supported" if !$len;
 
