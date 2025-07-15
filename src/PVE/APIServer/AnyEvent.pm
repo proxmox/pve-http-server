@@ -2,9 +2,8 @@ package PVE::APIServer::AnyEvent;
 
 # Note 1: interactions with Crypt::OpenSSL::RSA
 #
-# Some handlers (auth_handler) use Crypt::OpenSSL::RSA, which seems to
-# set the openssl error variable. We need to clear that here, else
-# AnyEvent::TLS aborts the connection.
+# Some handlers (auth_handler) use Crypt::OpenSSL::RSA, which seems to set the openssl error
+# variable. We need to clear that here, else AnyEvent::TLS aborts the connection.
 # Net::SSLeay::ERR_clear_error();
 
 use strict;
@@ -238,10 +237,9 @@ sub response_stream {
             return;
         }
 
-        # apply backpressure so we don't accept any more data into
-        # buffer if the client isn't downloading fast enough
-        # note: read_size can double upon read, and we also need to
-        # account for one more read after start_read, so *4
+        # apply backpressure so we don't accept any more data into buffer if the client isn't
+        # downloading fast enough. Note: read_size can double upon read, and we also need to account
+        # for one more read after# start_read, so multiply by 4
         if ($rbuf_len + $hdl->{read_size} * 4 > $buf_size) {
             # stop reading until write buffer is empty
             $hdl->on_read();
@@ -2111,8 +2109,7 @@ sub new {
 
     if ($self->{ssl}) {
         my $ssl_defaults = {
-            # Note: older versions are considered insecure, for example
-            # search for "Poodle"-Attack
+            # Note: always re older versions are considered insecure, for example "Poodle"-Attack
             method => 'any',
             sslv2 => 0,
             sslv3 => 0,
