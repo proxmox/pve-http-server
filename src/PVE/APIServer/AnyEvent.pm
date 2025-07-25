@@ -430,6 +430,7 @@ my $file_extension_info = {
     oga => { ct => 'audio/ogg', nocomp => 1 },
     tgz => { ct => 'application/x-compressed-tar', nocomp => 1 },
     wasm => { ct => 'application/wasm' },
+    mo => { ct => 'application/x-gettext-translation' },
 };
 
 sub send_file_start {
