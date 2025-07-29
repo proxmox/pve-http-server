@@ -28,6 +28,7 @@ sub read_proxy_config {
     $shcmd .= 'echo \"DISABLE_TLS_1_3:\$DISABLE_TLS_1_3\";';
     $shcmd .= 'echo \"PROXY_REAL_IP_HEADER:\$PROXY_REAL_IP_HEADER\";';
     $shcmd .= 'echo \"PROXY_REAL_IP_ALLOW_FROM:\$PROXY_REAL_IP_ALLOW_FROM\";';
+    $shcmd .= 'echo \"MAX_WORKERS:\$MAX_WORKERS\";';
 
     my $data = -f $conffile ? `bash -c "$shcmd"` : '';
 
@@ -77,6 +78,13 @@ sub read_proxy_config {
                 push @$ips, Net::IP->new(normalize_v4_in_v6($ip)) || die Net::IP::Error() . "\n";
             }
             $res->{$key} = $ips;
+        } elsif ($key eq 'MAX_WORKERS') {
+            if ($value =~ /^\d+$/ && $value > 0 && $value < 128) {
+                $res->{$key} = int($value);
+            } else {
+                warn "MAX_WORKERS specified in $conffile is not an integer between"
+                    ." 0 and 128: $value\n";
+            }
         } elsif (grep { $key eq $_ } @$boolean_options) {
             die "unknown value '$value' - use 0 or 1\n" if $value !~ m/^(0|1)$/;
             $res->{$key} = $value;
