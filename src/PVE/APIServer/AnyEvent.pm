@@ -431,6 +431,7 @@ my $file_extension_info = {
     tgz => { ct => 'application/x-compressed-tar', nocomp => 1 },
     wasm => { ct => 'application/wasm' },
     mo => { ct => 'application/x-gettext-translation' },
+    gz => { ct => 'application/gzip', nocomp => 1 },
 };
 
 sub send_file_start {
