@@ -1,3 +1,9 @@
+libpve-http-server-perl (6.0.4) trixie; urgency=medium
+
+  * add gzip's "gz" as supported file extensions
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 06 Aug 2025 11:37:34 +0200
+
 libpve-http-server-perl (6.0.3) trixie; urgency=medium
 
   * proxy config: read MAX_WORKERS integer key.
