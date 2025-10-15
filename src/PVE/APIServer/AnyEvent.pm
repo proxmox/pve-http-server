@@ -1254,6 +1254,9 @@ sub handle_request {
                 my ($subdir, $file) = ($1, $2);
                 if (my $dir = $self->{dirs}->{$subdir}) {
                     my $filename = "$dir$file";
+                    if (-d $filename) {
+                        die "unable to open file '$filename' because it is a directory\n";
+                    }
                     my $fh = IO::File->new($filename)
                         || die "unable to open file '$filename' - $!\n";
                     send_file_start($self, $reqstate, { path => $filename });
