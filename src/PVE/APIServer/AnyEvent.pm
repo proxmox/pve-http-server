@@ -480,7 +480,7 @@ sub send_file_start {
 
             if (!($fh = $download->{fh})) {
                 my $path = $download->{path};
-                die "internal error: {download} returned but neither fh not path given\n"
+                die "internal error: {download} returned but neither fh nor path given\n"
                     if !$path;
                 sysopen($fh, "$path", O_NONBLOCK | O_RDONLY)
                     or die "open stream path '$path' for reading failed: $!\n";
