@@ -1,3 +1,9 @@
+libpve-http-server-perl (6.0.5) trixie; urgency=medium
+
+  * server: add timestamps as prefix to debug logs.
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 21 Oct 2025 18:48:47 +0200
+
 libpve-http-server-perl (6.0.4) trixie; urgency=medium
 
   * add gzip's "gz" as supported file extensions
