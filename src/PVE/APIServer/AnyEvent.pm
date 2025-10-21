@@ -76,7 +76,9 @@ sub dprint {
 
     my ($pkg, $pkgfile, $line, $sub) = caller(1);
     $sub =~ s/^(?:.+::)+//;
-    print "worker[$$]: $pkg +$line: $sub: $message\n";
+    my ($secs, $microsecs) = gettimeofday();
+    my $timestr = strftime("%F %T", localtime($secs)) . sprintf(".%06d", $microsecs);
+    print "$timestr worker[$$]: $pkg +$line: $sub: $message\n";
 }
 
 sub log_request {
