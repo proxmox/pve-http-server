@@ -2030,13 +2030,12 @@ sub open_access_log {
     my ($self, $filename) = @_;
 
     my $old_mask = umask(0137);
-    my $logfh = IO::File->new($filename, ">>")
+    my $logfh = IO::File->new($filename, ">>:raw")
         || die "unable to open log file '$filename' - $!\n";
     umask($old_mask);
 
-    $logfh->autoflush(1);
-
     $self->{logfh} = $logfh;
+    $self->{logfh_syswrite} = 1;
 }
 
 sub write_log {
@@ -2044,10 +2043,19 @@ sub write_log {
 
     return if !defined($self->{logfh}) || !$data;
 
-    my $res = $self->{logfh}->print($data);
+    my $ok;
+    if ($self->{logfh_syswrite}) {
+        # Keep each log entry in one append write, preserving print's byte encoding.
+        utf8::encode($data) if !utf8::downgrade($data, 1);
+        my $written = syswrite($self->{logfh}, $data);
+        $ok = defined($written) && $written == length($data);
+    } else {
+        $ok = $self->{logfh}->print($data);
+    }
 
-    if (!$res) {
+    if (!$ok) {
         delete $self->{logfh};
+        delete $self->{logfh_syswrite};
         syslog('err', "error writing access log");
         $self->{end_loop} = 1; # terminate asap
     }
