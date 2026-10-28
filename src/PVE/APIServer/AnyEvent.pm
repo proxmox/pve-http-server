@@ -1399,6 +1399,28 @@ sub get_upload_filename {
     return "/var/tmp/pveupload-" . Digest::MD5::md5_hex($tmpfile_seq_no . time() . $$);
 }
 
+my $unique_headers = {
+    'content-length' => 1,
+    'host' => 1,
+    'cookie' => 1,
+};
+
+sub add_header {
+    my ($self, $reqstate, $key, $value) = @_;
+
+    return 1 if !$key;
+
+    my $request = $reqstate->{request};
+
+    if ($unique_headers->{ lc($key) } && defined($request->header($key))) {
+        $self->error($reqstate, 400, "invalid duplicate header");
+        return 0;
+    }
+
+    $request->push_header($key, $value);
+    return 1;
+}
+
 sub unshift_read_header {
     my ($self, $reqstate, $state) = @_;
 
@@ -1416,19 +1438,16 @@ sub unshift_read_header {
                 die "http header too large\n"
                     if ($state->{size} += length($line)) >= $limit_max_header_size;
 
-                my $r = $reqstate->{request};
                 if ($line eq '') {
 
-                    $r->push_header($state->{key}, $state->{val})
-                        if $state->{key};
-
+                    return if !$self->add_header($reqstate, $state->{key}, $state->{val});
                     return if !$self->process_header($reqstate);
                     return if !$self->ensure_tls_connection($reqstate);
 
                     $self->authenticate_and_handle_request($reqstate);
 
                 } elsif ($line =~ /^([^:\s]+)\s*:\s*(.*)/) {
-                    $r->push_header($state->{key}, $state->{val}) if $state->{key};
+                    return if !$self->add_header($reqstate, $state->{key}, $state->{val});
                     ($state->{key}, $state->{val}) = ($1, $2);
                     $self->unshift_read_header($reqstate, $state);
                 } elsif ($line =~ /^\s+(.*)/) {
