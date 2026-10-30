@@ -19,5 +19,5 @@ distclean: clean
 	rm -f examples/simple-demo.pem
 
 clean:
-	rm -rf examples/simple-demo.lck
+	rm -rf examples/simple-demo.lck examples/simple-demo.log
 	find . -name '*~' -exec rm {} ';'

@@ -2211,6 +2211,8 @@ sub new {
         $known_methods = { CONNECT => 1 };
     }
 
+    # Only a log file opened by the server gets each entry in one append write, see write_log().
+    warn "deprecated argument 'logfh', use 'logfile' instead\n" if defined($args{logfh});
     $self->open_access_log($self->{logfile}) if $self->{logfile};
 
     $self->{max_conn_soft_limit} =

@@ -516,7 +516,7 @@ my $server = DemoServer->new(
     lockfh => $lockfh,
     title => 'Simple Demo API',
     cookie_name => 'DEMO',
-    logfh => \*STDOUT,
+    logfile => 'simple-demo.log',
     tls_ctx => { verify => 0, cert_file => $cert_file },
     dirs => $dirs,
     pages => {

@@ -161,7 +161,7 @@ my $server = DemoServer->new(
     lockfile => $accept_lock_fn,
     lockfh => $lockfh,
     title => 'Simple Demo API',
-    logfh => \*STDOUT,
+    logfile => 'simple-demo.log',
     tls_ctx => { verify => 0, cert_file => $cert_file },
     pages => {
         '/' => sub { get_index($nodename, @_) },
