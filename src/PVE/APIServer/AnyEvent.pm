@@ -1412,6 +1412,10 @@ sub add_header {
 
     my $request = $reqstate->{request};
 
+    # Keep '_' in field names as received, like HTTP::Message::parse does. Translating it would
+    # merge a 'Content_Length' field into 'Content-Length' after the duplicate check missed it.
+    local $HTTP::Headers::TRANSLATE_UNDERSCORE = 0;
+
     if ($unique_headers->{ lc($key) } && defined($request->header($key))) {
         $self->error($reqstate, 400, "invalid duplicate header");
         return 0;
