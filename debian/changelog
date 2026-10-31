@@ -1,3 +1,37 @@
+libpve-http-server-perl (6.0.6) trixie; urgency=medium
+
+  * static files: report that a requested path is a directory instead of
+    failing with an unclear "unable to detect content type" error, and fix a
+    typo in an internal error message.
+
+  * access log:
+    - write each entry at once, so that on local file systems entries of other
+      worker processes can no longer end up in the middle of a long entry.
+      Unauthenticated clients could use this to forge log entries.
+    - log the request as the server parsed it and escape double quotes,
+      backslashes and non-printable characters as "\xXX", like nginx does.
+      Clients can thus neither inject terminal control sequences nor fake
+      fields, while entries of well-formed requests do not change.
+    - include the cause, such as a full or read-only file system, in the error
+      logged when writing an entry fails.
+    - deprecate the 'logfh' option for passing an opened log handle in favor
+      of the 'logfile' option, which ensures entries are written in one piece.
+
+  * request handling:
+    - reject requests that repeat the Content-Length, Host or Cookie header
+      with a 400 error, as the repeated values would get combined and could be
+      interpreted differently than intended.
+    - no longer treat underscores in header names as hyphens, so for example a
+      'Content_Length' header is ignored instead of being used as
+      'Content-Length', as a proxy in front may treat it as an unrelated
+      header. A front proxy that sends the configured real IP header with
+      underscores needs to use hyphens instead.
+    - reject request lines longer than 64 KiB with a 414 error. This prevents
+      clients from appending huge entries to the access log, while leaving
+      ample room for API calls with long query strings.
+
+ -- Proxmox Support Team <support@proxmox.com>  Sat, 31 Oct 2026 21:42:40 +0100
+
 libpve-http-server-perl (6.0.5) trixie; urgency=medium
 
   * server: add timestamps as prefix to debug logs.
