@@ -52,6 +52,7 @@ use PVE::APIServer::Utils;
 my $limit_max_headers = 64;
 my $limit_max_header_size = 8 * 1024;
 my $limit_max_post = 512 * 1024;
+my $limit_max_request_line = 64 * 1024;
 
 my $known_methods = {
     GET => 1,
@@ -1765,7 +1766,9 @@ sub push_request_header {
 
                     $reqstate->{keep_alive}--;
 
-                    if ($line =~ /(\S+)\040(\S+)\040HTTP\/(\d+)\.(\d+)/o) {
+                    if (length($line) > $limit_max_request_line) {
+                        $self->error($reqstate, 414, 'request line too long');
+                    } elsif ($line =~ /(\S+)\040(\S+)\040HTTP\/(\d+)\.(\d+)/o) {
                         my ($method, $url, $maj, $min) = ($1, $2, $3, $4);
 
                         if ($maj != 1) {
