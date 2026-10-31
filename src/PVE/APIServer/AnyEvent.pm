@@ -2066,20 +2066,22 @@ sub write_log {
 
     return if !defined($self->{logfh}) || !$data;
 
-    my $ok;
+    my $err;
     if ($self->{logfh_syswrite}) {
         # Keep each log entry in one append write, preserving print's byte encoding.
         utf8::encode($data) if !utf8::downgrade($data, 1);
         my $written = syswrite($self->{logfh}, $data);
-        $ok = defined($written) && $written == length($data);
+        if (!defined($written) || $written != length($data)) {
+            $err = defined($written) ? "incomplete write" : "$!";
+        }
     } else {
-        $ok = $self->{logfh}->print($data);
+        $err = "$!" if !$self->{logfh}->print($data);
     }
 
-    if (!$ok) {
+    if (defined($err)) {
         delete $self->{logfh};
         delete $self->{logfh_syswrite};
-        syslog('err', "error writing access log");
+        syslog('err', "error writing access log - $err");
         $self->{end_loop} = 1; # terminate asap
     }
 }
