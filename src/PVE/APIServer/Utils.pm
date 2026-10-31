@@ -83,7 +83,7 @@ sub read_proxy_config {
                 $res->{$key} = int($value);
             } else {
                 warn "MAX_WORKERS specified in $conffile is not an integer between"
-                    ." 0 and 128: $value\n";
+                    . " 0 and 128: $value\n";
             }
         } elsif (grep { $key eq $_ } @$boolean_options) {
             die "unknown value '$value' - use 0 or 1\n" if $value !~ m/^(0|1)$/;
