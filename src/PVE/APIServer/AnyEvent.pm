@@ -98,6 +98,8 @@ sub log_request {
     my $content_length = defined($loginfo->{content_length}) ? $loginfo->{content_length} : '-';
     my $code = $loginfo->{code} || 500;
     my $requestline = $loginfo->{requestline} || '-';
+    # Use nginx's default escaping for the quoted request field.
+    $requestline =~ s/([^\x20-\x7e]|["\\])/sprintf('\\x%02X', ord($1))/ge;
     my $timestr = strftime("%d/%m/%Y:%H:%M:%S %z", localtime());
 
     my $msg = "$realip - $userid [$timestr] \"$requestline\" $code $content_length\n";
@@ -1785,12 +1787,19 @@ sub push_request_header {
                         if ($self->{request_count} >= $self->{max_requests}) {
                             $self->{end_loop} = 1;
                         }
-                        $reqstate->{log} = { requestline => $line };
+                        my $request = HTTP::Request->new($method, $url);
+                        # Log only the matched request: text around it keeps its spaces when
+                        # escaped, so log parsers could read that text as the request.
+                        my $target = $request->uri->clone;
+                        $target->fragment(undef);
+                        $target = $target->as_string;
+                        $target = $url if $target eq '';
+                        $reqstate->{log} = { requestline => "$method $target HTTP/$maj.$min" };
                         $reqstate->{proto}->{str} = "HTTP/$maj.$min";
                         $reqstate->{proto}->{maj} = $maj;
                         $reqstate->{proto}->{min} = $min;
                         $reqstate->{proto}->{ver} = $maj * 1000 + $min;
-                        $reqstate->{request} = HTTP::Request->new($method, $url);
+                        $reqstate->{request} = $request;
                         $reqstate->{starttime} = [gettimeofday];
 
                         $self->unshift_read_header($reqstate);
