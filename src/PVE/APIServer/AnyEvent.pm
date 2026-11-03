@@ -295,7 +295,6 @@ sub response_stream {
                     # write out any remaining data
                     $reqhdl->push_write($hdl->{rbuf}) if length($hdl->{rbuf}) > 0;
                     $hdl->{rbuf} = "";
-                    $reqhdl->push_shutdown();
                     $self->finish_response($reqstate);
                 }
             };
@@ -386,6 +385,8 @@ sub response {
     } else {
         $resp->remove_header("Content-Length");
     }
+
+    $reqstate->{keep_alive} = 0 if $stream_fh;
 
     if ($reqstate->{keep_alive} > 0) {
         $resp->push_header('Connection' => 'Keep-Alive');
