@@ -1,3 +1,25 @@
+libpve-http-server-perl (6.0.7) trixie; urgency=medium
+
+  * request: do not handle a pipelined request while the response to a previous
+    one is still in progress. On a reused connection this could mix up their
+    responses.
+
+  * streamed downloads: do not send a TLS close notify if the response gets
+    aborted before its end, for example because reading the source failed. A
+    truncated download could otherwise look complete to the client.
+
+  * disconnect: also send the TLS close notify when closing the connection
+    after a response that could not be written out immediately, for example
+    to a slowly reading client. It was lost in that case, so clients could
+    report an unexpected EOF despite having received the whole response.
+
+  * streamed downloads, such as the single file restore one: close the
+    connection at the end of the response with a TLS close notify. Clients
+    using OpenSSL 3, such as curl, otherwise fail with an unexpected EOF error
+    despite having received the complete download.
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 05 Nov 2026 13:42:23 +0100
+
 libpve-http-server-perl (6.0.6) trixie; urgency=medium
 
   * static files: report that a requested path is a directory instead of
