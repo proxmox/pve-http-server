@@ -198,6 +198,10 @@ sub finish_response {
     if (!$self->{end_loop} && $reqstate->{keep_alive} > 0) {
         # print "KEEPALIVE $reqstate->{keep_alive}\n" if $self->{debug};
         $hdl->on_read(sub {
+            my ($hdl) = @_;
+            # Do not dispatch further pipelined requests until the response to this one finished.
+            # Keep a callback, as without one a client leaving goes unnoticed on plain connections.
+            $hdl->on_read(sub { });
             eval { $self->push_request_header($reqstate); };
             warn $@ if $@;
         });
