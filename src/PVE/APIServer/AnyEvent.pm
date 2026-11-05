@@ -159,7 +159,9 @@ sub client_do_disconnect {
 
         $self->dprint("CLOSE FH" . $hdl->{fh}->fileno());
 
-        $hdl->stoptls(); # can invoke callbacks and destroy the handle
+        # Only the end of the connection delimits a streamed body, so a TLS close notify while it is
+        # unfinished would make the truncated response look complete to the client.
+        $hdl->stoptls() if !$reqstate->{streaming}; # can invoke callbacks and destroy the handle
 
         shutdown($hdl->{fh}, 1) if defined($hdl) && defined($hdl->{fh});
     };
@@ -219,6 +221,8 @@ sub response_stream {
     # disable timeout, we don't know how big the data is
     $reqstate->{hdl}->timeout(0);
 
+    $reqstate->{streaming} = 1;
+
     my $buf_size = 4 * 1024 * 1024;
 
     my $on_read;
@@ -273,6 +277,7 @@ sub response_stream {
         on_eof => sub {
             my ($hdl) = @_;
             eval {
+                delete $reqstate->{streaming};
                 if (my $reqhdl = $reqstate->{hdl}) {
                     $self->log_aborted_request($reqstate);
                     # write out any remaining data
