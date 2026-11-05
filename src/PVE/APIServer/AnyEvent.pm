@@ -159,11 +159,23 @@ sub client_do_disconnect {
 
         $self->dprint("CLOSE FH" . $hdl->{fh}->fileno());
 
+        my $had_queued_data = length($hdl->{wbuf});
+
         # Only the end of the connection delimits a streamed body, so a TLS close notify while it is
         # unfinished would make the truncated response look complete to the client.
         $hdl->stoptls() if !$reqstate->{streaming}; # can invoke callbacks and destroy the handle
 
-        shutdown($hdl->{fh}, 1) if defined($hdl) && defined($hdl->{fh});
+        return if !defined($hdl) || !defined($hdl->{fh});
+
+        # From within the write watcher, as when a response has drained, stoptls() can only queue
+        # the close notify. Let the destructor flush it and close the socket, as shutting down now
+        # would lose it. Keep the immediate shutdown if output was already queued before stoptls(),
+        # as flushing that could hold on to the socket and a large buffer for the whole timeout.
+        if (!$had_queued_data && length($hdl->{wbuf})) {
+            $hdl->{linger} = $self->{timeout};
+        } else {
+            shutdown($hdl->{fh}, 1);
+        }
     };
 
     if (my $proxyhdl = delete $reqstate->{proxyhdl}) {
